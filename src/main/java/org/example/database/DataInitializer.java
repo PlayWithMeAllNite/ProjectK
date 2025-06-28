@@ -4,6 +4,7 @@ import org.example.controller.*;
 import org.example.model.*;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 /**
@@ -38,7 +39,8 @@ public class DataInitializer {
             initializeProductTypes(connection);
             initializeOrders(connection);
             
-            System.out.println("Все данные успешно загружены из базы данных");
+            // Обновляем общие суммы покупок клиентов на основе их заказов
+            updateClientsTotalPurchases();
             
         } catch (SQLException e) {
             System.err.println("Ошибка при инициализации данных: " + e.getMessage());
@@ -50,8 +52,6 @@ public class DataInitializer {
      * Инициализирует роли и пользователей
      */
     public void initializeRolesAndUsers(Connection connection) throws SQLException {
-        System.out.println("Загрузка ролей и пользователей...");
-        
         // Загружаем роли
         RoleContainer roleContainer = RoleContainer.getInstance();
         roleContainer.loadFromDatabase(connection);
@@ -59,57 +59,38 @@ public class DataInitializer {
         // Загружаем пользователей
         UserContainer userContainer = UserContainer.getInstance();
         userContainer.loadFromDatabase(connection);
-        
-        System.out.println("Загружено ролей: " + roleContainer.getRoles().size());
-        System.out.println("Загружено пользователей: " + userContainer.getUsers().size());
     }
     
     /**
      * Инициализирует клиентов
      */
     public void initializeClients(Connection connection) throws SQLException {
-        System.out.println("Загрузка клиентов...");
-        
         ClientsController clientsController = ClientsController.getInstance();
         clientsController.loadClients();
-        
-        System.out.println("Загружено клиентов: " + clientsController.getClients().size());
     }
     
     /**
      * Инициализирует материалы
      */
     public void initializeMaterials(Connection connection) throws SQLException {
-        System.out.println("Загрузка материалов...");
-        
         MaterialsController materialsController = MaterialsController.getInstance();
         materialsController.loadMaterials();
-        
-        System.out.println("Загружено материалов: " + materialsController.getMaterials().size());
     }
     
     /**
      * Инициализирует типы изделий
      */
     public void initializeProductTypes(Connection connection) throws SQLException {
-        System.out.println("Загрузка типов изделий...");
-        
         ProductTypesController productTypesController = ProductTypesController.getInstance();
         productTypesController.loadProductTypes();
-        
-        System.out.println("Загружено типов изделий: " + productTypesController.getProductTypes().size());
     }
     
     /**
      * Инициализирует заказы
      */
     public void initializeOrders(Connection connection) throws SQLException {
-        System.out.println("Загрузка заказов...");
-        
         OrdersController ordersController = OrdersController.getInstance();
         ordersController.loadOrders();
-        
-        System.out.println("Загружено заказов: " + ordersController.getOrders().size());
     }
     
     /**
@@ -127,15 +108,23 @@ public class DataInitializer {
      * Очищает все данные из памяти
      */
     public void clearAllData() {
-        System.out.println("Очистка всех данных из памяти...");
-        
         RoleContainer.getInstance().clear();
         UserContainer.getInstance().clear();
         ClientContainer.getInstance().clear();
         MaterialContainer.getInstance().clear();
         ProductTypeContainer.getInstance().clear();
         OrderContainer.getInstance().clear();
-        
-        System.out.println("Все данные очищены");
+    }
+    
+    /**
+     * Обновляет общие суммы покупок всех клиентов
+     */
+    private void updateClientsTotalPurchases() {
+        try {
+            ClientsController clientsController = ClientsController.getInstance();
+            clientsController.updateAllClientsTotalPurchases();
+        } catch (Exception e) {
+            System.err.println("Ошибка при обновлении общих сумм покупок клиентов: " + e.getMessage());
+        }
     }
 } 

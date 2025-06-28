@@ -39,10 +39,12 @@ public class MaterialsController {
 
     // ==================== МЕТОДЫ РАБОТЫ С БАЗОЙ ДАННЫХ ====================
 
+    /**
+     * Загружает материалы из базы данных
+     */
     public void loadMaterials() {
         try (Connection connection = DatabaseManager.getInstance().getConnection()) {
             materials.loadFromDatabase(connection);
-            System.out.println("Материалы загружены из БД: " + materials.getMaterials().size() + " записей");
         } catch (SQLException e) {
             System.err.println("Ошибка загрузки материалов: " + e.getMessage());
             showError("Ошибка загрузки данных", "Не удалось загрузить материалы из базы данных");
@@ -50,18 +52,8 @@ public class MaterialsController {
     }
 
     /**
-     * Обновляет данные материалов через DataInitializer
+     * Добавляет новый материал в базу данных
      */
-    public void refreshMaterials() {
-        try {
-            DataInitializer.getInstance().initializeMaterials(DatabaseManager.getInstance().getConnection());
-            updateTableView();
-        } catch (SQLException e) {
-            System.err.println("Ошибка обновления материалов: " + e.getMessage());
-            showError("Ошибка обновления", "Не удалось обновить данные материалов");
-        }
-    }
-
     public boolean addMaterial(Material material) {
         try (Connection connection = DatabaseManager.getInstance().getConnection()) {
             String query = "INSERT INTO materials (name, cost_per_gram) VALUES (?, ?)";
@@ -126,19 +118,7 @@ public class MaterialsController {
             return false;
         }
         
-        // Проверяем, используется ли материал в заказах
         try (Connection connection = DatabaseManager.getInstance().getConnection()) {
-            String checkQuery = "SELECT COUNT(*) FROM order_materials WHERE material_id = ?";
-            try (PreparedStatement checkStmt = connection.prepareStatement(checkQuery)) {
-                checkStmt.setInt(1, materialId);
-                try (ResultSet rs = checkStmt.executeQuery()) {
-                    if (rs.next() && rs.getInt(1) > 0) {
-                        showError("Ошибка удаления", "Нельзя удалить материал, который используется в заказах!");
-                        return false;
-                    }
-                }
-            }
-
             String query = "DELETE FROM materials WHERE material_id = ?";
             try (PreparedStatement stmt = connection.prepareStatement(query)) {
                 stmt.setInt(1, materialId);

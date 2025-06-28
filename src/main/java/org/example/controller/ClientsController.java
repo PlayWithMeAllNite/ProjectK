@@ -45,7 +45,6 @@ public class ClientsController {
     public void loadClients() {
         try (Connection connection = DatabaseManager.getInstance().getConnection()) {
             clients.loadFromDatabase(connection);
-            System.out.println("Клиенты загружены из БД: " + clients.getClients().size() + " записей");
         } catch (SQLException e) {
             System.err.println("Ошибка загрузки клиентов: " + e.getMessage());
             showError("Ошибка загрузки данных", "Не удалось загрузить клиентов из базы данных");
@@ -143,20 +142,12 @@ public class ClientsController {
             showError("Ошибка удаления", "Клиент не найден");
             return false;
         }
-
-        // Проверяем, есть ли у клиента заказы
-        OrdersController ordersController = OrdersController.getInstance();
-        List<org.example.model.Order> clientOrders = ordersController.getOrdersByClient(clientId);
-        if (!clientOrders.isEmpty()) {
-            showError("Ошибка удаления", "Нельзя удалить клиента, у которого есть заказы!");
-            return false;
-        }
-
+        
         try (Connection connection = DatabaseManager.getInstance().getConnection()) {
             String query = "DELETE FROM clients WHERE client_id = ?";
             try (PreparedStatement stmt = connection.prepareStatement(query)) {
                 stmt.setInt(1, clientId);
-
+                
                 int result = stmt.executeUpdate();
                 if (result > 0) {
                     // Удаляем клиента из списка
@@ -175,9 +166,9 @@ public class ClientsController {
     }
     
     /**
-     * Обновляет скидку клиента на основе суммы покупок
+     * Обновляет общую сумму покупок клиента на основе его заказов
      */
-    public void updateClientDiscount(int clientId) {
+    public void updateClientTotalPurchases(int clientId) {
         try (Connection connection = DatabaseManager.getInstance().getConnection()) {
             // Вычисляем общую сумму покупок
             String sumQuery = "SELECT COALESCE(SUM(price), 0) as total FROM orders " +
@@ -196,27 +187,80 @@ public class ClientsController {
             // Определяем скидку на основе суммы покупок
             int discount = calculateDiscount(totalPurchases);
             
-            // Обновляем скидку и общую сумму покупок
-            String updateQuery = "UPDATE clients SET discount = ?, total_purchases = ? WHERE client_id = ?";
+            // Обновляем общую сумму покупок и скидку
+            String updateQuery = "UPDATE clients SET total_purchases = ?, discount = ? WHERE client_id = ?";
             try (PreparedStatement updateStmt = connection.prepareStatement(updateQuery)) {
-                updateStmt.setInt(1, discount);
-                updateStmt.setBigDecimal(2, totalPurchases);
+                updateStmt.setBigDecimal(1, totalPurchases);
+                updateStmt.setInt(2, discount);
                 updateStmt.setInt(3, clientId);
                 updateStmt.executeUpdate();
             }
             
             // Обновляем данные в контейнере и интерфейсе
-            loadClients();
-            updateTableView();
+            refreshClients();
             
-            Client client = getClientById(clientId);
-            if (client != null) {
-                showSuccess("Скидка обновлена", 
-                    "Скидка клиента " + client.getFullName() + " обновлена до " + discount + "%");
-            }
         } catch (SQLException e) {
-            System.err.println("Ошибка обновления скидки клиента: " + e.getMessage());
-            showError("Ошибка обновления скидки", "Не удалось обновить скидку клиента");
+            System.err.println("Ошибка обновления общей суммы покупок клиента: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Обновляет общую сумму покупок для всех клиентов
+     */
+    public void updateAllClientsTotalPurchases() {
+        try (Connection connection = DatabaseManager.getInstance().getConnection()) {
+            // Получаем всех клиентов
+            String clientsQuery = "SELECT client_id FROM clients";
+            try (PreparedStatement clientsStmt = connection.prepareStatement(clientsQuery)) {
+                try (ResultSet rs = clientsStmt.executeQuery()) {
+                    while (rs.next()) {
+                        int clientId = rs.getInt("client_id");
+                        updateClientTotalPurchasesInternal(connection, clientId);
+                    }
+                }
+            }
+            
+            // Обновляем данные в контейнере и интерфейсе один раз в конце
+            refreshClients();
+            
+        } catch (SQLException e) {
+            System.err.println("Ошибка обновления общей суммы покупок всех клиентов: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Внутренний метод для обновления общей суммы покупок клиента (без refreshClients)
+     */
+    private void updateClientTotalPurchasesInternal(Connection connection, int clientId) {
+        try {
+            // Вычисляем общую сумму покупок
+            String sumQuery = "SELECT COALESCE(SUM(price), 0) as total FROM orders " +
+                             "WHERE client_id = ? AND status = 'COMPLETED'";
+            
+            BigDecimal totalPurchases = BigDecimal.ZERO;
+            try (PreparedStatement sumStmt = connection.prepareStatement(sumQuery)) {
+                sumStmt.setInt(1, clientId);
+                try (ResultSet rs = sumStmt.executeQuery()) {
+                    if (rs.next()) {
+                        totalPurchases = rs.getBigDecimal("total");
+                    }
+                }
+            }
+            
+            // Определяем скидку на основе суммы покупок
+            int discount = calculateDiscount(totalPurchases);
+            
+            // Обновляем общую сумму покупок и скидку
+            String updateQuery = "UPDATE clients SET total_purchases = ?, discount = ? WHERE client_id = ?";
+            try (PreparedStatement updateStmt = connection.prepareStatement(updateQuery)) {
+                updateStmt.setBigDecimal(1, totalPurchases);
+                updateStmt.setInt(2, discount);
+                updateStmt.setInt(3, clientId);
+                updateStmt.executeUpdate();
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Ошибка обновления общей суммы покупок клиента " + clientId + ": " + e.getMessage());
         }
     }
     

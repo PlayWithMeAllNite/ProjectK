@@ -88,13 +88,30 @@ public class UsersController {
     /**
      * Добавляет нового пользователя
      */
-    public void addUser() {
+    public boolean addUser(User user) {
         try {
-            // Здесь можно открыть диалог для добавления пользователя
-            // Пока просто показываем сообщение
-            showInfo("Добавление пользователя", "Функция добавления пользователя будет реализована позже");
-        } catch (Exception e) {
+            Connection connection = DatabaseManager.getInstance().getConnection();
+            String sql = "INSERT INTO users (username, password_hash, role_id) VALUES (?, ?, ?)";
+            PreparedStatement stmt = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
+            stmt.setString(1, user.getUsername());
+            stmt.setString(2, user.getPasswordHash());
+            stmt.setInt(3, user.getRole().getRoleId());
+            
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows > 0) {
+                // Получаем ID нового пользователя
+                ResultSet rs = stmt.getGeneratedKeys();
+                if (rs.next()) {
+                    user.setUserId(rs.getInt(1));
+                }
+                users.getUsers().add(user);
+                refreshTableView();
+                return true;
+            }
+            return false;
+        } catch (SQLException e) {
             showError("Ошибка добавления пользователя", e.getMessage());
+            return false;
         }
     }
     
@@ -117,39 +134,73 @@ public class UsersController {
     }
     
     /**
-     * Удаляет выбранного пользователя
+     * Обновляет существующего пользователя
      */
-    public void deleteUser() {
-        User selectedUser = tableView.getSelectionModel().getSelectedItem();
-        if (selectedUser == null) {
-            showWarning("Предупреждение", "Выберите пользователя для удаления");
-            return;
-        }
-        
-        Alert alert = new Alert(AlertType.CONFIRMATION);
-        alert.setTitle("Подтверждение удаления");
-        alert.setHeaderText("Удаление пользователя");
-        alert.setContentText("Вы уверены, что хотите удалить пользователя '" + selectedUser.getUsername() + "'?");
-        
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() == ButtonType.OK) {
-            try {
-                Connection connection = DatabaseManager.getInstance().getConnection();
-                String sql = "DELETE FROM users WHERE user_id = ?";
-                PreparedStatement stmt = connection.prepareStatement(sql);
-                stmt.setInt(1, selectedUser.getUserId());
-                
-                int affectedRows = stmt.executeUpdate();
-                if (affectedRows > 0) {
-                    users.getUsers().remove(selectedUser);
-                    refreshTableView();
-                    showInfo("Успех", "Пользователь успешно удален");
-                } else {
-                    showError("Ошибка", "Не удалось удалить пользователя");
-                }
-            } catch (SQLException e) {
-                showError("Ошибка удаления пользователя", e.getMessage());
+    public boolean updateUser(User user) {
+        try {
+            Connection connection = DatabaseManager.getInstance().getConnection();
+            
+            // Проверяем, изменился ли пароль
+            User originalUser = getUserById(user.getUserId());
+            String sql;
+            PreparedStatement stmt;
+            
+            if (originalUser != null && user.getPasswordHash().equals(originalUser.getPasswordHash())) {
+                // Пароль не изменился, обновляем только логин и роль
+                sql = "UPDATE users SET username = ?, role_id = ? WHERE user_id = ?";
+                stmt = connection.prepareStatement(sql);
+                stmt.setString(1, user.getUsername());
+                stmt.setInt(2, user.getRole().getRoleId());
+                stmt.setInt(3, user.getUserId());
+            } else {
+                // Пароль изменился, обновляем все поля
+                sql = "UPDATE users SET username = ?, password_hash = ?, role_id = ? WHERE user_id = ?";
+                stmt = connection.prepareStatement(sql);
+                stmt.setString(1, user.getUsername());
+                stmt.setString(2, user.getPasswordHash());
+                stmt.setInt(3, user.getRole().getRoleId());
+                stmt.setInt(4, user.getUserId());
             }
+            
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows > 0) {
+                // Обновляем пользователя в списке
+                for (int i = 0; i < users.getUsers().size(); i++) {
+                    if (users.getUsers().get(i).getUserId() == user.getUserId()) {
+                        users.getUsers().set(i, user);
+                        break;
+                    }
+                }
+                refreshTableView();
+                return true;
+            }
+            return false;
+        } catch (SQLException e) {
+            showError("Ошибка обновления пользователя", e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Удаляет пользователя по ID
+     */
+    public boolean deleteUser(int userId) {
+        try {
+            Connection connection = DatabaseManager.getInstance().getConnection();
+            String sql = "DELETE FROM users WHERE user_id = ?";
+            PreparedStatement stmt = connection.prepareStatement(sql);
+            stmt.setInt(1, userId);
+            
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows > 0) {
+                users.getUsers().removeIf(user -> user.getUserId() == userId);
+                refreshTableView();
+                return true;
+            }
+            return false;
+        } catch (SQLException e) {
+            showError("Ошибка удаления пользователя", e.getMessage());
+            return false;
         }
     }
     

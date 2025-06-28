@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" 
+      spacing="10" style="-fx-padding: 20;" fx:controller="org.example.view.UserDialogController">
+   <children>
+      <Label text="Логин:" />
+      <TextField fx:id="usernameField" promptText="Введите логин" />
+      
+      <Label text="Пароль:" />
+      <PasswordField fx:id="passwordField" promptText="Введите пароль (оставьте пустым, чтобы не изменять)" />
+      <Label text="При редактировании пользователя оставьте поле пароля пустым, чтобы не изменять пароль" 
+             style="-fx-font-size: 10; -fx-text-fill: gray;" />
+      
+      <Label text="Роль:" />
+      <ComboBox fx:id="roleComboBox" promptText="Выберите роль" />
+      
+      <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-padding: 10;">
+         <children>
+            <Button text="OK" onAction="#handleOk" fx:id="okButton" defaultButton="true" />
+            <Button text="Отмена" onAction="#handleCancel" cancelButton="true" />
+         </children>
+      </HBox>
+   </children>
+</VBox> 

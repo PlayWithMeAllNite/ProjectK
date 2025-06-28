@@ -28,8 +28,6 @@
                               <Button text="Добавить" onAction="#handleAddClient" fx:id="addClientBtn" />
                               <Button text="Редактировать" onAction="#handleEditClient" fx:id="editClientBtn" />
                               <Button text="Удалить" onAction="#handleDeleteClient" fx:id="deleteClientBtn" />
-                              <Region HBox.hgrow="ALWAYS" />
-                              <Button text="Обновить" onAction="#handleRefreshClients" />
                            </children>
                         </HBox>
                         
@@ -57,8 +55,6 @@
                               <Button text="Добавить" onAction="#handleAddMaterial" fx:id="addMaterialBtn" />
                               <Button text="Редактировать" onAction="#handleEditMaterial" fx:id="editMaterialBtn" />
                               <Button text="Удалить" onAction="#handleDeleteMaterial" fx:id="deleteMaterialBtn" />
-                              <Region HBox.hgrow="ALWAYS" />
-                              <Button text="Обновить" onAction="#handleRefreshMaterials" />
                            </children>
                         </HBox>
                         
@@ -83,8 +79,6 @@
                               <Button text="Добавить" onAction="#handleAddProductType" fx:id="addProductTypeBtn" />
                               <Button text="Редактировать" onAction="#handleEditProductType" fx:id="editProductTypeBtn" />
                               <Button text="Удалить" onAction="#handleDeleteProductType" fx:id="deleteProductTypeBtn" />
-                              <Region HBox.hgrow="ALWAYS" />
-                              <Button text="Обновить" onAction="#handleRefreshProductTypes" />
                            </children>
                         </HBox>
                         
@@ -109,8 +103,6 @@
                               <Button text="Добавить" onAction="#handleAddOrder" fx:id="addOrderBtn" />
                               <Button text="Редактировать" onAction="#handleEditOrder" fx:id="editOrderBtn" />
                               <Button text="Удалить" onAction="#handleDeleteOrder" fx:id="deleteOrderBtn" />
-                              <Region HBox.hgrow="ALWAYS" />
-                              <Button text="Обновить" onAction="#handleRefreshOrders" />
                            </children>
                         </HBox>
                         
@@ -140,8 +132,6 @@
                               <Button text="Добавить" onAction="#handleAddUser" fx:id="addUserBtn" />
                               <Button text="Редактировать" onAction="#handleEditUser" fx:id="editUserBtn" />
                               <Button text="Удалить" onAction="#handleDeleteUser" fx:id="deleteUserBtn" />
-                              <Region HBox.hgrow="ALWAYS" />
-                              <Button text="Обновить" onAction="#handleRefreshUsers" />
                            </children>
                         </HBox>
                         

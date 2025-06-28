@@ -3,6 +3,8 @@ package org.example.controller;
 import org.example.database.DatabaseManager;
 import org.example.model.User;
 import org.example.model.Role;
+import org.example.view.MainController;
+import org.example.util.PasswordUtils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -28,27 +30,25 @@ public class AuthController {
         try (Connection connection = DatabaseManager.getInstance().getConnection()) {
             String query = "SELECT u.user_id, u.username, u.password_hash, u.role_id, r.role_name " +
                           "FROM users u JOIN roles r ON u.role_id = r.role_id " +
-                          "WHERE u.username = ? AND u.password_hash = ?";
-            
+                          "WHERE u.username = ?";
             try (PreparedStatement stmt = connection.prepareStatement(query)) {
                 stmt.setString(1, username);
-                stmt.setString(2, hashPassword(password));
-                
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
-                        Role role = new Role(
-                            rs.getInt("role_id"),
-                            rs.getString("role_name")
-                        );
-                        
-                        currentUser = new User(
-                            rs.getInt("user_id"),
-                            rs.getString("username"),
-                            rs.getString("password_hash"),
-                            role
-                        );
-                        
-                        return true;
+                        String storedHash = rs.getString("password_hash");
+                        if (PasswordUtils.verifyPassword(password, storedHash)) {
+                            Role role = new Role(
+                                rs.getInt("role_id"),
+                                rs.getString("role_name")
+                            );
+                            currentUser = new User(
+                                rs.getInt("user_id"),
+                                rs.getString("username"),
+                                storedHash,
+                                role
+                            );
+                            return true;
+                        }
                     }
                 }
             }
@@ -56,6 +56,15 @@ public class AuthController {
             System.err.println("Login error: " + e.getMessage());
         }
         return false;
+    }
+    
+    /**
+     * Применяет права доступа после успешного входа
+     */
+    public void applyPermissionsAfterLogin() {
+        if (currentUser != null && MainController.getInstance() != null) {
+            MainController.getInstance().applyPermissions();
+        }
     }
     
     public void logout() {

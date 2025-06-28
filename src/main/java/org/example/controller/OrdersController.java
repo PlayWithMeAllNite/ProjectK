@@ -90,9 +90,9 @@ public class OrdersController {
                                 addOrderMaterial(order.getOrderId(), material);
                             }
                             
-                            // Если заказ создается со статусом COMPLETED, обновляем общую сумму клиента
-                            if (order.getStatus() == Order.Status.COMPLETED) {
-                                updateClientTotalPurchases(order.getClient().getClientId(), BigDecimal.ZERO);
+                            // Если заказ создается со статусом COMPLETED или READY, обновляем общую сумму клиента
+                            if (order.getStatus() == Order.Status.COMPLETED || order.getStatus() == Order.Status.READY) {
+                                ClientsController.getInstance().updateClientTotalPurchases(order.getClient().getClientId());
                             }
                             
                             return true;
@@ -151,7 +151,7 @@ public class OrdersController {
                     
                     // Если статус заказа изменился, пересчитываем общую сумму клиента
                     if (oldStatus != order.getStatus()) {
-                        updateClientTotalPurchases(order.getClient().getClientId(), BigDecimal.ZERO);
+                        ClientsController.getInstance().updateClientTotalPurchases(order.getClient().getClientId());
                     }
                     
                     return true;
@@ -161,70 +161,6 @@ public class OrdersController {
             System.err.println("Error updating order: " + e.getMessage());
         }
         return false;
-    }
-    
-    /**
-     * Обновляет общую сумму покупок клиента
-     */
-    private void updateClientTotalPurchases(int clientId, BigDecimal amountToAdd) {
-        try (Connection connection = DatabaseManager.getInstance().getConnection()) {
-            // Пересчитываем общую сумму всех завершенных заказов клиента
-            String sumQuery = "SELECT COALESCE(SUM(price), 0) as total FROM orders " +
-                             "WHERE client_id = ? AND status = 'COMPLETED'";
-            BigDecimal totalPurchases = BigDecimal.ZERO;
-            
-            try (PreparedStatement sumStmt = connection.prepareStatement(sumQuery)) {
-                sumStmt.setInt(1, clientId);
-                try (ResultSet rs = sumStmt.executeQuery()) {
-                    if (rs.next()) {
-                        totalPurchases = rs.getBigDecimal("total");
-                        if (totalPurchases == null) {
-                            totalPurchases = BigDecimal.ZERO;
-                        }
-                    }
-                }
-            }
-            
-            // Определяем новую скидку на основе суммы покупок
-            int newDiscount = calculateDiscount(totalPurchases);
-            
-            // Обновляем сумму покупок и скидку клиента
-            String updateQuery = "UPDATE clients SET total_purchases = ?, discount = ? WHERE client_id = ?";
-            try (PreparedStatement updateStmt = connection.prepareStatement(updateQuery)) {
-                updateStmt.setBigDecimal(1, totalPurchases);
-                updateStmt.setInt(2, newDiscount);
-                updateStmt.setInt(3, clientId);
-                updateStmt.executeUpdate();
-            }
-            
-            // Обновляем данные клиента в контейнере
-            ClientContainer clientContainer = ClientContainer.getInstance();
-            Client client = clientContainer.getClientById(clientId);
-            if (client != null) {
-                client.setTotalPurchases(totalPurchases);
-                client.setDiscount(newDiscount);
-            }
-            
-            System.out.println("Обновлена общая сумма клиента ID " + clientId + ": " + totalPurchases + " (скидка: " + newDiscount + "%)");
-            
-        } catch (SQLException e) {
-            System.err.println("Error updating client total purchases: " + e.getMessage());
-        }
-    }
-    
-    /**
-     * Вычисляет скидку клиента на основе суммы покупок
-     */
-    private int calculateDiscount(BigDecimal totalPurchases) {
-        if (totalPurchases.compareTo(BigDecimal.valueOf(100000)) >= 0) {
-            return 15; // 15% скидка при покупках от 100,000
-        } else if (totalPurchases.compareTo(BigDecimal.valueOf(50000)) >= 0) {
-            return 10; // 10% скидка при покупках от 50,000
-        } else if (totalPurchases.compareTo(BigDecimal.valueOf(25000)) >= 0) {
-            return 5;  // 5% скидка при покупках от 25,000
-        } else {
-            return 0;  // Без скидки
-        }
     }
     
     public boolean deleteOrder(int orderId) {
@@ -246,9 +182,11 @@ public class OrdersController {
                 
                 int result = stmt.executeUpdate();
                 if (result > 0) {
-                    // Если удаляемый заказ был завершен, пересчитываем общую сумму клиента
-                    if (orderToDelete != null && orderToDelete.getStatus() == Order.Status.COMPLETED) {
-                        updateClientTotalPurchases(orderToDelete.getClient().getClientId(), BigDecimal.ZERO);
+                    // Если удаляемый заказ был завершен или готов, пересчитываем общую сумму клиента
+                    if (orderToDelete != null && 
+                        (orderToDelete.getStatus() == Order.Status.COMPLETED || 
+                         orderToDelete.getStatus() == Order.Status.READY)) {
+                        ClientsController.getInstance().updateClientTotalPurchases(orderToDelete.getClient().getClientId());
                     }
                     
                     // Удаляем заказ из списка

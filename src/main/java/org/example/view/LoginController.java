@@ -51,6 +51,9 @@ public class LoginController {
                 stage.setMaximized(true);
                 stage.show();
                 
+                // Применяем права доступа после успешного входа
+                authController.applyPermissionsAfterLogin();
+                
             } catch (IOException e) {
                 messageLabel.setText("Ошибка загрузки главного окна: " + e.getMessage());
             }

@@ -19,6 +19,12 @@ import java.time.format.DateTimeFormatter;
 
 public class MainController {
     
+    // Статический экземпляр для доступа из других классов
+    private static MainController instance;
+    public static MainController getInstance() {
+        return instance;
+    }
+    
     @FXML private TabPane tabPane;
     @FXML private Label userLabel;
     
@@ -82,6 +88,9 @@ public class MainController {
     private User currentUser;
     
     public void initialize() {
+        // Устанавливаем статический экземпляр
+        instance = this;
+        
         // Инициализация контроллеров
         clientsController = ClientsController.getInstance();
         materialsController = MaterialsController.getInstance();
@@ -104,9 +113,6 @@ public class MainController {
         
         // Загружаем данные
         refreshAllData();
-        
-        // Применяем ролевую авторизацию
-        applyRoleBasedAuthorization();
     }
     
     /**
@@ -119,13 +125,14 @@ public class MainController {
         } else {
             userLabel.setText("Пользователь системы");
         }
-        applyRoleBasedAuthorization();
+        applyPermissions();
     }
     
     /**
      * Применяет ролевую авторизацию на основе роли текущего пользователя
+     * Вызывается сразу после входа пользователя
      */
-    private void applyRoleBasedAuthorization() {
+    public void applyPermissions() {
         if (currentUser == null) {
             // Если пользователь не авторизован, показываем только заказы
             disableAllTabs();
@@ -321,10 +328,6 @@ public class MainController {
         }
     }
     
-    @FXML private void handleRefreshClients() {
-        refreshAllData();
-    }
-    
     // Обработчики для материалов
     @FXML private void handleAddMaterial() {
         showMaterialDialog(null);
@@ -356,10 +359,6 @@ public class MainController {
                 // Данные уже обновлены в контроллере
             }
         }
-    }
-    
-    @FXML private void handleRefreshMaterials() {
-        materialsController.refreshMaterials();
     }
     
     // Обработчики для типов изделий
@@ -398,10 +397,6 @@ public class MainController {
         }
     }
     
-    @FXML private void handleRefreshProductTypes() {
-        refreshAllData();
-    }
-    
     // Обработчики для заказов
     @FXML private void handleAddOrder() {
         showOrderDialog(null);
@@ -437,10 +432,6 @@ public class MainController {
                 showAlert("Ошибка", "Не удалось удалить заказ");
             }
         }
-    }
-    
-    @FXML private void handleRefreshOrders() {
-        refreshAllData();
     }
     
     // Методы для показа диалогов
@@ -612,22 +603,80 @@ public class MainController {
     // Методы для работы с пользователями
     @FXML
     private void handleAddUser() {
-        usersController.addUser();
+        showUserDialog(null);
     }
     
     @FXML
     private void handleEditUser() {
-        usersController.editUser();
+        User selectedUser = usersTable.getSelectionModel().getSelectedItem();
+        if (selectedUser != null) {
+            showUserDialog(selectedUser);
+        } else {
+            showAlert("Предупреждение", "Пожалуйста, выберите пользователя для редактирования");
+        }
     }
     
     @FXML
     private void handleDeleteUser() {
-        usersController.deleteUser();
+        User selectedUser = usersTable.getSelectionModel().getSelectedItem();
+        if (selectedUser != null) {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Подтверждение удаления");
+            alert.setHeaderText("Удалить пользователя?");
+            alert.setContentText("Вы уверены, что хотите удалить пользователя '" + selectedUser.getUsername() + "'?");
+            
+            if (alert.showAndWait().orElse(null) == ButtonType.OK) {
+                boolean success = usersController.deleteUser(selectedUser.getUserId());
+                if (success) {
+                    refreshAllData();
+                    showAlert("Успех", "Пользователь удален");
+                } else {
+                    showAlert("Ошибка", "Не удалось удалить пользователя");
+                }
+            }
+        } else {
+            showAlert("Предупреждение", "Пожалуйста, выберите пользователя для удаления");
+        }
     }
     
-    @FXML
-    private void handleRefreshUsers() {
-        usersController.refreshUsers();
+    private void showUserDialog(User user) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/UserDialog.fxml"));
+            Parent page = loader.load();
+            
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle(user == null ? "Добавить пользователя" : "Редактировать пользователя");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(userLabel.getScene().getWindow());
+            Scene scene = new Scene(page);
+            dialogStage.setScene(scene);
+            
+            UserDialogController controller = loader.getController();
+            controller.setDialogStage(dialogStage);
+            controller.setUser(user);
+            
+            dialogStage.showAndWait();
+            
+            if (controller.isOkClicked()) {
+                User newUser = controller.getUser();
+                boolean success;
+                if (user == null) {
+                    success = usersController.addUser(newUser);
+                } else {
+                    success = usersController.updateUser(newUser);
+                }
+                
+                if (success) {
+                    refreshAllData();
+                    showAlert("Успех", user == null ? "Пользователь добавлен" : "Пользователь обновлен");
+                } else {
+                    showAlert("Ошибка", "Не удалось сохранить пользователя");
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert("Ошибка", "Не удалось загрузить диалог пользователя");
+        }
     }
     
     // Вспомогательные методы для отображения диалогов

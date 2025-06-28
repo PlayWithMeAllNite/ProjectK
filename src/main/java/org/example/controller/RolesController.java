@@ -208,6 +208,13 @@ public class RolesController {
         return roles.getRoles();
     }
     
+    /**
+     * Получает все роли (алиас для getAllRoles)
+     */
+    public List<Role> getRoles() {
+        return roles.getRoles();
+    }
+    
     // Вспомогательные методы для отображения диалогов
     private void showError(String title, String content) {
         Alert alert = new Alert(AlertType.ERROR);
