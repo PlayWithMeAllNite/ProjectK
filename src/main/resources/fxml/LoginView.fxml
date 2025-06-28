@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<VBox alignment="CENTER" spacing="20.0" style="-fx-background-color: linear-gradient(to bottom right, #4a90e2, #357abd);" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.view.LoginController">
+   <children>
+      <Label text="Вход в систему" style="-fx-text-fill: white;">
+         <font>
+            <Font size="24.0" />
+         </font>
+      </Label>
+      <VBox alignment="CENTER" spacing="10.0" style="-fx-background-color: white; -fx-background-radius: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 10, 0, 0, 0);" maxWidth="400.0" minWidth="400.0">
+         <padding>
+            <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
+         </padding>
+         <children>
+            <Label text="Авторизация администратора" style="-fx-text-fill: #333;">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Label>
+            <VBox spacing="5.0">
+               <children>
+                  <Label text="Логин:" style="-fx-text-fill: #666;" />
+                  <TextField fx:id="usernameField" promptText="Введите логин" />
+               </children>
+            </VBox>
+            <VBox spacing="5.0">
+               <children>
+                  <Label text="Пароль:" style="-fx-text-fill: #666;" />
+                  <PasswordField fx:id="passwordField" promptText="Введите пароль" />
+               </children>
+            </VBox>
+            <Label fx:id="errorLabel" style="-fx-text-fill: red; -fx-font-size: 12;" text="" />
+            <Button fx:id="loginButton" mnemonicParsing="false" onAction="#handleLogin" style="-fx-background-color: #4a90e2; -fx-text-fill: white; -fx-font-weight: bold;" text="Войти">
+               <VBox.margin>
+                  <Insets top="10.0" />
+               </VBox.margin>
+            </Button>
+         </children>
+      </VBox>
+      <Label text="Ювелирная мастерская" style="-fx-text-fill: white; -fx-opacity: 0.8;">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </Label>
+   </children>
+</VBox> 

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox spacing="10" alignment="CENTER" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.view.OrderDialogController">
+    <children>
+        <Label text="Заказ" style="-fx-font-size: 18; -fx-font-weight: bold;" />
+        
+        <!-- Основная информация о заказе -->
+        <HBox spacing="10">
+            <children>
+                <Label text="Клиент:" />
+                <ComboBox fx:id="clientComboBox" prefWidth="200" />
+            </children>
+        </HBox>
+        <HBox spacing="10">
+            <children>
+                <Label text="Тип изделия:" />
+                <ComboBox fx:id="productTypeComboBox" prefWidth="150" />
+            </children>
+        </HBox>
+        <HBox spacing="10">
+            <children>
+                <Label text="Статус:" />
+                <ComboBox fx:id="statusComboBox" prefWidth="120" />
+            </children>
+        </HBox>
+        <HBox spacing="10">
+            <children>
+                <Label text="Дата:" />
+                <DatePicker fx:id="orderDatePicker" />
+            </children>
+        </HBox>
+        
+        <!-- Материалы заказа -->
+        <Label text="Материалы изделия:" style="-fx-font-weight: bold;" />
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <children>
+                <Label text="Материал:" />
+                <ComboBox fx:id="materialComboBox" prefWidth="150" />
+                <Label text="Вес (г):" />
+                <TextField fx:id="materialWeightField" prefWidth="80" />
+                <Button text="Добавить материал" fx:id="addMaterialBtn" onAction="#handleAddMaterial" />
+            </children>
+        </HBox>
+        
+        <!-- Таблица материалов -->
+        <TableView fx:id="materialsTable" prefHeight="150" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn text="Материал" fx:id="materialNameColumn" prefWidth="150" />
+                <TableColumn text="Вес (г)" fx:id="materialWeightColumn" prefWidth="80" />
+                <TableColumn text="Цена за грамм" fx:id="materialCostColumn" prefWidth="100" />
+                <TableColumn text="Стоимость" fx:id="materialTotalColumn" prefWidth="100" />
+                <TableColumn text="Действия" fx:id="materialActionColumn" prefWidth="80" />
+            </columns>
+        </TableView>
+        
+        <!-- Итоговая информация -->
+        <HBox spacing="10">
+            <children>
+                <Label text="Общий вес (г):" />
+                <TextField fx:id="totalWeightField" prefWidth="100" editable="false" />
+            </children>
+        </HBox>
+        <HBox spacing="10">
+            <children>
+                <Label text="Цена работы:" />
+                <TextField fx:id="laborCostField" prefWidth="100" editable="false" />
+            </children>
+        </HBox>
+        <HBox spacing="10">
+            <children>
+                <Label text="Итого цена (₽):" />
+                <TextField fx:id="priceField" prefWidth="100" editable="false" />
+            </children>
+        </HBox>
+        
+        <!-- Кнопки -->
+        <HBox spacing="10" alignment="CENTER">
+            <children>
+                <Button text="OK" fx:id="okButton" onAction="#handleOk" />
+                <Button text="Отмена" fx:id="cancelButton" onAction="#handleCancel" />
+            </children>
+        </HBox>
+    </children>
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20" />
+    </padding>
+</VBox> 

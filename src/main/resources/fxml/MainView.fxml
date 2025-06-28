@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.view.MainController">
+   <top>
+      <HBox style="-fx-background-color: #2c3e50; -fx-padding: 10;" alignment="CENTER_LEFT">
+         <children>
+            <Label text="Ювелирная мастерская" style="-fx-text-fill: white; -fx-font-size: 18; -fx-font-weight: bold;" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Label fx:id="userLabel" text="" style="-fx-text-fill: white;" />
+            <Button text="Выйти" onAction="#handleLogout" style="-fx-background-color: #e74c3c; -fx-text-fill: white;" />
+         </children>
+      </HBox>
+   </top>
+   
+   <center>
+      <TabPane fx:id="tabPane" tabClosingPolicy="UNAVAILABLE">
+         <tabs>
+            <Tab text="Клиенты" fx:id="clientsTab">
+               <content>
+                  <VBox spacing="10" style="-fx-padding: 10;">
+                     <children>
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                           <children>
+                              <Button text="Добавить" onAction="#handleAddClient" fx:id="addClientBtn" />
+                              <Button text="Редактировать" onAction="#handleEditClient" fx:id="editClientBtn" />
+                              <Button text="Удалить" onAction="#handleDeleteClient" fx:id="deleteClientBtn" />
+                              <Region HBox.hgrow="ALWAYS" />
+                              <Button text="Обновить" onAction="#handleRefreshClients" />
+                           </children>
+                        </HBox>
+                        
+                        <TableView fx:id="clientsTable" VBox.vgrow="ALWAYS">
+                           <columns>
+                              <TableColumn text="ID" fx:id="clientIdColumn" prefWidth="50" />
+                              <TableColumn text="Телефон" fx:id="clientPhoneColumn" prefWidth="120" />
+                              <TableColumn text="ФИО" fx:id="clientNameColumn" prefWidth="200" />
+                              <TableColumn text="Email" fx:id="clientEmailColumn" prefWidth="150" />
+                              <TableColumn text="Сумма покупок" fx:id="clientTotalColumn" prefWidth="120" />
+                              <TableColumn text="Скидка %" fx:id="clientDiscountColumn" prefWidth="80" />
+                           </columns>
+                        </TableView>
+                     </children>
+                  </VBox>
+               </content>
+            </Tab>
+            
+            <Tab text="Материалы" fx:id="materialsTab">
+               <content>
+                  <VBox spacing="10" style="-fx-padding: 10;">
+                     <children>
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                           <children>
+                              <Button text="Добавить" onAction="#handleAddMaterial" fx:id="addMaterialBtn" />
+                              <Button text="Редактировать" onAction="#handleEditMaterial" fx:id="editMaterialBtn" />
+                              <Button text="Удалить" onAction="#handleDeleteMaterial" fx:id="deleteMaterialBtn" />
+                              <Region HBox.hgrow="ALWAYS" />
+                              <Button text="Обновить" onAction="#handleRefreshMaterials" />
+                           </children>
+                        </HBox>
+                        
+                        <TableView fx:id="materialsTable" VBox.vgrow="ALWAYS">
+                           <columns>
+                              <TableColumn text="ID" fx:id="materialIdColumn" prefWidth="50" />
+                              <TableColumn text="Название" fx:id="materialNameColumn" prefWidth="200" />
+                              <TableColumn text="Цена за грамм" fx:id="materialCostColumn" prefWidth="120" />
+                           </columns>
+                        </TableView>
+                     </children>
+                  </VBox>
+               </content>
+            </Tab>
+            
+            <Tab text="Типы изделий" fx:id="productTypesTab">
+               <content>
+                  <VBox spacing="10" style="-fx-padding: 10;">
+                     <children>
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                           <children>
+                              <Button text="Добавить" onAction="#handleAddProductType" fx:id="addProductTypeBtn" />
+                              <Button text="Редактировать" onAction="#handleEditProductType" fx:id="editProductTypeBtn" />
+                              <Button text="Удалить" onAction="#handleDeleteProductType" fx:id="deleteProductTypeBtn" />
+                              <Region HBox.hgrow="ALWAYS" />
+                              <Button text="Обновить" onAction="#handleRefreshProductTypes" />
+                           </children>
+                        </HBox>
+                        
+                        <TableView fx:id="productTypesTable" VBox.vgrow="ALWAYS">
+                           <columns>
+                              <TableColumn text="ID" fx:id="productTypeIdColumn" prefWidth="50" />
+                              <TableColumn text="Название" fx:id="productTypeNameColumn" prefWidth="200" />
+                              <TableColumn text="Цена работы" fx:id="productTypeCostColumn" prefWidth="120" />
+                           </columns>
+                        </TableView>
+                     </children>
+                  </VBox>
+               </content>
+            </Tab>
+            
+            <Tab text="Заказы" fx:id="ordersTab">
+               <content>
+                  <VBox spacing="10" style="-fx-padding: 10;">
+                     <children>
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                           <children>
+                              <Button text="Добавить" onAction="#handleAddOrder" fx:id="addOrderBtn" />
+                              <Button text="Редактировать" onAction="#handleEditOrder" fx:id="editOrderBtn" />
+                              <Button text="Удалить" onAction="#handleDeleteOrder" fx:id="deleteOrderBtn" />
+                              <Region HBox.hgrow="ALWAYS" />
+                              <Button text="Обновить" onAction="#handleRefreshOrders" />
+                           </children>
+                        </HBox>
+                        
+                        <TableView fx:id="ordersTable" VBox.vgrow="ALWAYS">
+                           <columns>
+                              <TableColumn text="№" fx:id="orderIdColumn" prefWidth="50" />
+                              <TableColumn text="Дата" fx:id="orderDateColumn" prefWidth="100" />
+                              <TableColumn text="Статус" fx:id="orderStatusColumn" prefWidth="120" />
+                              <TableColumn text="Клиент" fx:id="orderClientColumn" prefWidth="150" />
+                              <TableColumn text="Тип изделия" fx:id="orderTypeColumn" prefWidth="150" />
+                              <TableColumn text="Вес, г" fx:id="orderWeightColumn" prefWidth="80" />
+                              <TableColumn text="Цена, ₽" fx:id="orderPriceColumn" prefWidth="100" />
+                              <TableColumn text="Итого со скидкой" fx:id="orderTotalColumn" prefWidth="120" />
+                           </columns>
+                        </TableView>
+                     </children>
+                  </VBox>
+               </content>
+            </Tab>
+         </tabs>
+      </TabPane>
+   </center>
+</BorderPane> 
