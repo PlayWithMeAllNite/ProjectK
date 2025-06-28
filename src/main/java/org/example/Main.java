@@ -8,16 +8,22 @@ import javafx.stage.Stage;
 import org.example.database.DatabaseManager;
 
 public class Main extends Application {
+    
     @Override
     public void start(Stage primaryStage) throws Exception {
+        // Инициализация подключения к БД
         DatabaseManager.getInstance();
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/LoginView.fxml"));
+        
+        // Загрузка главного окна
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/MainView.fxml"));
         Parent root = loader.load();
-        primaryStage.setTitle("Ювелирная мастерская - Вход в систему");
+        
+        primaryStage.setTitle("Ювелирная мастерская");
         primaryStage.setScene(new Scene(root));
-        primaryStage.setResizable(false);
+        primaryStage.setMaximized(true);
         primaryStage.show();
     }
+    
     public static void main(String[] args) {
         launch(args);
     }

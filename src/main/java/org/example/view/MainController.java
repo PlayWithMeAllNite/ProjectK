@@ -62,26 +62,26 @@ public class MainController {
     private MaterialsController materialsController;
     private ProductTypesController productTypesController;
     private OrdersController ordersController;
-    private AuthController authController;
     
     public void initialize() {
+        // Инициализация контроллеров
         clientsController = ClientsController.getInstance();
         materialsController = MaterialsController.getInstance();
         productTypesController = ProductTypesController.getInstance();
         ordersController = OrdersController.getInstance();
-        authController = AuthController.getInstance();
         
-        // Показываем логин и роль пользователя
-        if (authController.isAuthenticated()) {
-            userLabel.setText(authController.getCurrentUser().getUsername() + " (" + authController.getCurrentRole() + ")");
-        }
+        // Устанавливаем информацию о пользователе
+        userLabel.setText("Пользователь системы");
         
+        // Инициализируем таблицы
         initializeTables();
         
+        // Загружаем данные
         refreshAllData();
     }
     
     private void initializeTables() {
+        // Настройка таблицы клиентов
         clientIdColumn.setCellValueFactory(data -> 
             new javafx.beans.property.SimpleIntegerProperty(data.getValue().getClientId()).asObject());
         clientPhoneColumn.setCellValueFactory(data -> 
@@ -95,6 +95,7 @@ public class MainController {
         clientDiscountColumn.setCellValueFactory(data -> 
             new javafx.beans.property.SimpleIntegerProperty(data.getValue().getDiscount()).asObject());
         
+        // Настройка таблицы материалов
         materialIdColumn.setCellValueFactory(data -> 
             new javafx.beans.property.SimpleIntegerProperty(data.getValue().getMaterialId()).asObject());
         materialNameColumn.setCellValueFactory(data -> 
@@ -102,6 +103,7 @@ public class MainController {
         materialCostColumn.setCellValueFactory(data -> 
             new javafx.beans.property.SimpleObjectProperty<>(data.getValue().getCostPerGram()));
         
+        // Настройка таблицы типов изделий
         productTypeIdColumn.setCellValueFactory(data -> 
             new javafx.beans.property.SimpleIntegerProperty(data.getValue().getTypeId()).asObject());
         productTypeNameColumn.setCellValueFactory(data -> 
@@ -109,6 +111,7 @@ public class MainController {
         productTypeCostColumn.setCellValueFactory(data -> 
             new javafx.beans.property.SimpleObjectProperty<>(data.getValue().getLaborCost()));
         
+        // Настройка таблицы заказов
         orderIdColumn.setCellValueFactory(data -> 
             new javafx.beans.property.SimpleIntegerProperty(data.getValue().getOrderId()).asObject());
         orderDateColumn.setCellValueFactory(data -> 
@@ -129,21 +132,27 @@ public class MainController {
     }
     
     private void refreshAllData() {
+        // Загружаем данные из БД
         clientsController.loadClients();
         materialsController.loadMaterials();
         productTypesController.loadProductTypes();
         ordersController.loadOrders();
         
+        // Обновляем таблицы
         clientsTable.setItems(FXCollections.observableArrayList(clientsController.getAllClients()));
         materialsTable.setItems(FXCollections.observableArrayList(materialsController.getAllMaterials()));
         productTypesTable.setItems(FXCollections.observableArrayList(productTypesController.getAllProductTypes()));
         ordersTable.setItems(FXCollections.observableArrayList(ordersController.getAllOrders()));
     }
     
+    private void refreshClientsData() {
+        // Обновляем только данные клиентов
+        clientsController.loadClients();
+        clientsTable.setItems(FXCollections.observableArrayList(clientsController.getAllClients()));
+    }
+    
     @FXML
     private void handleLogout() {
-        authController.logout();
-        
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/LoginView.fxml"));
             Parent root = loader.load();
@@ -308,6 +317,7 @@ public class MainController {
         if (alert.showAndWait().orElse(null) == ButtonType.OK) {
             if (ordersController.deleteOrder(selected.getOrderId())) {
                 refreshAllData();
+                refreshClientsData();
                 showAlert("Успех", "Заказ успешно удален");
             } else {
                 showAlert("Ошибка", "Не удалось удалить заказ");
@@ -466,6 +476,7 @@ public class MainController {
                 
                 if (success) {
                     refreshAllData();
+                    refreshClientsData();
                     showAlert("Успех", order == null ? "Заказ добавлен" : "Заказ обновлен");
                 } else {
                     showAlert("Ошибка", "Не удалось сохранить заказ");

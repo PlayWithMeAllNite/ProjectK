@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="10" style="-fx-padding: 10;" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.view.OrdersViewController">
+    <children>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <children>
+                <Button text="Добавить" onAction="#handleAddOrder" fx:id="addOrderBtn" />
+                <Button text="Редактировать" onAction="#handleEditOrder" fx:id="editOrderBtn" />
+                <Button text="Удалить" onAction="#handleDeleteOrder" fx:id="deleteOrderBtn" />
+                <Region HBox.hgrow="ALWAYS" />
+                <Button text="Обновить" onAction="#handleRefreshOrders" />
+            </children>
+        </HBox>
+        
+        <TableView fx:id="ordersTable" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn text="ID" fx:id="orderIdColumn" prefWidth="50" />
+                <TableColumn text="Клиент" fx:id="orderClientColumn" prefWidth="150" />
+                <TableColumn text="Тип изделия" fx:id="orderProductTypeColumn" prefWidth="150" />
+                <TableColumn text="Дата заказа" fx:id="orderDateColumn" prefWidth="120" />
+                <TableColumn text="Статус" fx:id="orderStatusColumn" prefWidth="100" />
+                <TableColumn text="Стоимость" fx:id="orderCostColumn" prefWidth="100" />
+            </columns>
+        </TableView>
+    </children>
+</VBox> 

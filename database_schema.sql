@@ -72,12 +72,11 @@ INSERT INTO roles (role_name) VALUES
 ('MANAGER'),
 ('MASTER');
 
--- Три фиксированных пользователя (логин/пароль совпадают с ролью)
--- Пароли: admin, manager, master (SHA-256)
+-- Пользователи (пароль: admin123)
 INSERT INTO users (username, password_hash, role_id) VALUES 
-('admin', '8c6976e5b5410415bde908bd4dee15dfb16a7a60c6f6a7d89f5cb918f0f9a7f8', 1),
-('manager', 'c822c2b3e6a2c1b2e2c1e7e2e2c1e7e2e2c1e7e2e2c1e7e2e2c1e7e2e2c1e7e2', 2),
-('master', 'b8e1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1', 3);
+('admin', 'sha256_hash_here', 1),
+('manager', 'sha256_hash_here', 2),
+('master', 'sha256_hash_here', 3);
 
 -- Клиенты
 INSERT INTO clients (phone, full_name, email, total_purchases, discount) VALUES 

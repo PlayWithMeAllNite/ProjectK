@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox spacing="10" alignment="CENTER" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.view.ProductTypeDialogController">
+    <children>
+        <Label text="Тип изделия" style="-fx-font-size: 18; -fx-font-weight: bold;" />
+        <HBox spacing="10">
+            <children>
+                <Label text="Название:" />
+                <TextField fx:id="nameField" prefWidth="200" />
+            </children>
+        </HBox>
+        <HBox spacing="10">
+            <children>
+                <Label text="Цена работы:" />
+                <TextField fx:id="costField" prefWidth="100" />
+            </children>
+        </HBox>
+        <HBox spacing="10" alignment="CENTER">
+            <children>
+                <Button text="OK" fx:id="okButton" onAction="#handleOk" />
+                <Button text="Отмена" fx:id="cancelButton" onAction="#handleCancel" />
+            </children>
+        </HBox>
+    </children>
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20" />
+    </padding>
+</VBox> 

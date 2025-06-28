@@ -4,8 +4,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
@@ -23,18 +21,7 @@ public class LoginController {
     private PasswordField passwordField;
     
     @FXML
-    private Label errorLabel;
-    
-    @FXML
-    private Button loginButton;
-    
-    private AuthController authController;
-    
-    @FXML
-    public void initialize() {
-        authController = AuthController.getInstance();
-        passwordField.setOnAction(event -> handleLogin());
-    }
+    private Label messageLabel;
     
     @FXML
     private void handleLogin() {
@@ -42,45 +29,38 @@ public class LoginController {
         String password = passwordField.getText();
         
         if (username.isEmpty() || password.isEmpty()) {
-            showError("Пожалуйста, введите логин и пароль");
+            messageLabel.setText("Введите логин и пароль");
             return;
         }
         
-        loginButton.setDisable(true);
-        errorLabel.setText("");
-        
-        if (authController.authenticate(username, password)) {
+        AuthController authController = AuthController.getInstance();
+        if (authController.login(username, password)) {
             try {
+                // Загружаем главное окно
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/MainView.fxml"));
                 Parent root = loader.load();
+                
                 MainController mainController = loader.getController();
                 mainController.initialize();
+                
                 Stage stage = (Stage) usernameField.getScene().getWindow();
-                Scene scene = new Scene(root);
-                stage.setScene(scene);
-                stage.setTitle("Ювелирная мастерская - " + authController.getCurrentRole());
+                stage.setTitle("Ювелирная мастерская - " + authController.getCurrentUser().getUsername());
+                stage.setScene(new Scene(root));
                 stage.setMaximized(true);
+                stage.show();
+                
             } catch (IOException e) {
-                showError("Ошибка загрузки главного окна: " + e.getMessage());
-                e.printStackTrace();
+                messageLabel.setText("Ошибка загрузки главного окна: " + e.getMessage());
             }
         } else {
-            showError("Неверный логин или пароль");
+            messageLabel.setText("Неверный логин или пароль");
             passwordField.clear();
-            passwordField.requestFocus();
         }
-        loginButton.setDisable(false);
     }
     
-    private void showError(String message) {
-        errorLabel.setText(message);
-    }
-    
-    private void showAlert(String title, String content, Alert.AlertType type) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        alert.showAndWait();
+    @FXML
+    private void handleCancel() {
+        Stage stage = (Stage) usernameField.getScene().getWindow();
+        stage.close();
     }
 } 
