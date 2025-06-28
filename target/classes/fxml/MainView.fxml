@@ -130,6 +130,32 @@
                   </VBox>
                </content>
             </Tab>
+            
+            <Tab text="Пользователи" fx:id="usersTab">
+               <content>
+                  <VBox spacing="10" style="-fx-padding: 10;">
+                     <children>
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                           <children>
+                              <Button text="Добавить" onAction="#handleAddUser" fx:id="addUserBtn" />
+                              <Button text="Редактировать" onAction="#handleEditUser" fx:id="editUserBtn" />
+                              <Button text="Удалить" onAction="#handleDeleteUser" fx:id="deleteUserBtn" />
+                              <Region HBox.hgrow="ALWAYS" />
+                              <Button text="Обновить" onAction="#handleRefreshUsers" />
+                           </children>
+                        </HBox>
+                        
+                        <TableView fx:id="usersTable" VBox.vgrow="ALWAYS">
+                           <columns>
+                              <TableColumn text="ID" fx:id="userIdColumn" prefWidth="50" />
+                              <TableColumn text="Логин" fx:id="userUsernameColumn" prefWidth="150" />
+                              <TableColumn text="Роль" fx:id="userRoleColumn" prefWidth="120" />
+                           </columns>
+                        </TableView>
+                     </children>
+                  </VBox>
+               </content>
+            </Tab>
          </tabs>
       </TabPane>
    </center>

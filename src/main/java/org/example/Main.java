@@ -6,6 +6,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import org.example.database.DatabaseManager;
+import org.example.database.DataInitializer;
 
 public class Main extends Application {
     
@@ -14,13 +15,22 @@ public class Main extends Application {
         // Инициализация подключения к БД
         DatabaseManager.getInstance();
         
-        // Загрузка главного окна
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/MainView.fxml"));
+        // Инициализация всех данных из базы данных
+        try {
+            DataInitializer.getInstance().initializeAllData();
+        } catch (Exception e) {
+            System.err.println("Ошибка при инициализации данных: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        // Загрузка экрана авторизации
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/LoginView.fxml"));
         Parent root = loader.load();
         
-        primaryStage.setTitle("Ювелирная мастерская");
+        primaryStage.setTitle("Ювелирная мастерская - Авторизация");
         primaryStage.setScene(new Scene(root));
-        primaryStage.setMaximized(true);
+        primaryStage.setResizable(false);
+        primaryStage.centerOnScreen();
         primaryStage.show();
     }
     

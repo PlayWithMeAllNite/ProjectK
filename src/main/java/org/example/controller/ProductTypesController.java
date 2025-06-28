@@ -3,6 +3,9 @@ package org.example.controller;
 import org.example.database.DatabaseManager;
 import org.example.model.ProductType;
 import org.example.model.ProductTypeContainer;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.scene.control.TableView;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -13,6 +16,7 @@ import java.util.List;
 public class ProductTypesController {
     private static ProductTypesController instance;
     private ProductTypeContainer productTypes;
+    private TableView<ProductType> tableView;
 
     private ProductTypesController() {
         productTypes = ProductTypeContainer.getInstance();
@@ -24,10 +28,36 @@ public class ProductTypesController {
         }
         return instance;
     }
+    
+    /**
+     * Устанавливает TableView для отображения данных
+     */
+    public void setTableView(TableView<ProductType> tableView) {
+        this.tableView = tableView;
+        refreshTableView();
+    }
+    
+    /**
+     * Обновляет отображение таблицы
+     */
+    public void updateTableView() {
+        refreshTableView();
+    }
+    
+    /**
+     * Обновляет отображение таблицы
+     */
+    private void refreshTableView() {
+        if (tableView != null) {
+            ObservableList<ProductType> productTypeList = FXCollections.observableArrayList(productTypes.getProductTypes());
+            tableView.setItems(productTypeList);
+        }
+    }
 
     public void loadProductTypes() {
         try (Connection connection = DatabaseManager.getInstance().getConnection()) {
             productTypes.loadFromDatabase(connection);
+            refreshTableView();
         } catch (SQLException e) {
             System.err.println("Error loading product types: " + e.getMessage());
         }

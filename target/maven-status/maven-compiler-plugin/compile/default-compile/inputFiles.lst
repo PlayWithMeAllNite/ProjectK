@@ -2,7 +2,9 @@ C:\Zak\src\main\java\org\example\controller\ClientsController.java
 C:\Zak\src\main\java\org\example\controller\ProductTypesController.java
 C:\Zak\src\main\java\org\example\Main.java
 C:\Zak\src\main\java\org\example\model\Order.java
+C:\Zak\src\main\java\org\example\database\DataInitializer.java
 C:\Zak\src\main\java\org\example\model\User.java
+C:\Zak\src\main\java\org\example\controller\UsersController.java
 C:\Zak\src\main\java\org\example\model\OrderContainer.java
 C:\Zak\src\main\java\org\example\database\DatabaseManager.java
 C:\Zak\src\main\java\org\example\controller\AuthController.java
@@ -19,6 +21,7 @@ C:\Zak\src\main\java\org\example\view\MainController.java
 C:\Zak\src\main\java\org\example\controller\MaterialsController.java
 C:\Zak\src\main\java\org\example\model\ProductTypeContainer.java
 C:\Zak\src\main\java\org\example\view\OrderDialogController.java
+C:\Zak\src\main\java\org\example\controller\RolesController.java
 C:\Zak\src\main\java\org\example\controller\OrdersController.java
 C:\Zak\src\main\java\org\example\model\Client.java
 C:\Zak\src\main\java\org\example\model\Role.java

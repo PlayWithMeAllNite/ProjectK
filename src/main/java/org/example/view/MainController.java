@@ -11,6 +11,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import org.example.controller.*;
 import org.example.model.*;
+import org.example.database.DataInitializer;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -57,11 +58,28 @@ public class MainController {
     @FXML private TableColumn<Order, BigDecimal> orderTotalColumn;
     @FXML private Button addOrderBtn, editOrderBtn, deleteOrderBtn;
     
+    // Пользователи
+    @FXML private TableView<User> usersTable;
+    @FXML private TableColumn<User, Integer> userIdColumn;
+    @FXML private TableColumn<User, String> userUsernameColumn;
+    @FXML private TableColumn<User, String> userRoleColumn;
+    @FXML private Button addUserBtn, editUserBtn, deleteUserBtn;
+    
+    // Табы для ролевой авторизации
+    @FXML private Tab clientsTab, materialsTab, productTypesTab, ordersTab, usersTab;
+    
     // Контроллеры
     private ClientsController clientsController;
     private MaterialsController materialsController;
     private ProductTypesController productTypesController;
     private OrdersController ordersController;
+    private UsersController usersController;
+    
+    // Инициализатор данных
+    private DataInitializer dataInitializer;
+    
+    // Текущий пользователь
+    private User currentUser;
     
     public void initialize() {
         // Инициализация контроллеров
@@ -69,86 +87,188 @@ public class MainController {
         materialsController = MaterialsController.getInstance();
         productTypesController = ProductTypesController.getInstance();
         ordersController = OrdersController.getInstance();
+        usersController = UsersController.getInstance();
         
-        // Устанавливаем информацию о пользователе
-        userLabel.setText("Пользователь системы");
+        // Инициализация инициализатора данных
+        dataInitializer = DataInitializer.getInstance();
+        
+        // Устанавливаем таблицы в контроллеры
+        clientsController.setTableView(clientsTable);
+        materialsController.setTableView(materialsTable);
+        productTypesController.setTableView(productTypesTable);
+        ordersController.setTableView(ordersTable);
+        usersController.setTableView(usersTable);
         
         // Инициализируем таблицы
         initializeTables();
         
         // Загружаем данные
         refreshAllData();
+        
+        // Применяем ролевую авторизацию
+        applyRoleBasedAuthorization();
+    }
+    
+    /**
+     * Устанавливает текущего пользователя и применяет ролевую авторизацию
+     */
+    public void setCurrentUser(User user) {
+        this.currentUser = user;
+        if (user != null) {
+            userLabel.setText("Пользователь: " + user.getUsername() + " (" + user.getRole().getRoleName() + ")");
+        } else {
+            userLabel.setText("Пользователь системы");
+        }
+        applyRoleBasedAuthorization();
+    }
+    
+    /**
+     * Применяет ролевую авторизацию на основе роли текущего пользователя
+     */
+    private void applyRoleBasedAuthorization() {
+        if (currentUser == null) {
+            // Если пользователь не авторизован, показываем только заказы
+            disableAllTabs();
+            ordersTab.setDisable(false);
+            return;
+        }
+        
+        String roleName = currentUser.getRole().getRoleName();
+        
+        // Сначала отключаем все табы
+        disableAllTabs();
+        
+        // Включаем табы в зависимости от роли
+        switch (roleName) {
+            case "ADMIN":
+                // Администратор видит все
+                clientsTab.setDisable(false);
+                materialsTab.setDisable(false);
+                productTypesTab.setDisable(false);
+                ordersTab.setDisable(false);
+                usersTab.setDisable(false);
+                break;
+            case "MANAGER":
+                // Менеджер видит клиентов и заказы
+                clientsTab.setDisable(false);
+                ordersTab.setDisable(false);
+                break;
+            case "MASTER":
+                // Мастер видит только заказы
+                ordersTab.setDisable(false);
+                break;
+            default:
+                // По умолчанию показываем только заказы
+                ordersTab.setDisable(false);
+                break;
+        }
+        
+        // Переходим на первую активную вкладку
+        selectFirstActiveTab();
+    }
+    
+    /**
+     * Отключает все табы
+     */
+    private void disableAllTabs() {
+        clientsTab.setDisable(true);
+        materialsTab.setDisable(true);
+        productTypesTab.setDisable(true);
+        ordersTab.setDisable(true);
+        usersTab.setDisable(true);
+    }
+    
+    /**
+     * Выбирает первую активную вкладку
+     */
+    private void selectFirstActiveTab() {
+        for (Tab tab : tabPane.getTabs()) {
+            if (!tab.isDisable()) {
+                tabPane.getSelectionModel().select(tab);
+                break;
+            }
+        }
     }
     
     private void initializeTables() {
-        // Настройка таблицы клиентов
-        clientIdColumn.setCellValueFactory(data -> 
-            new javafx.beans.property.SimpleIntegerProperty(data.getValue().getClientId()).asObject());
-        clientPhoneColumn.setCellValueFactory(data -> 
-            new javafx.beans.property.SimpleStringProperty(data.getValue().getPhone()));
-        clientNameColumn.setCellValueFactory(data -> 
-            new javafx.beans.property.SimpleStringProperty(data.getValue().getFullName()));
-        clientEmailColumn.setCellValueFactory(data -> 
-            new javafx.beans.property.SimpleStringProperty(data.getValue().getEmail()));
-        clientTotalColumn.setCellValueFactory(data -> 
-            new javafx.beans.property.SimpleObjectProperty<>(data.getValue().getTotalPurchases()));
-        clientDiscountColumn.setCellValueFactory(data -> 
-            new javafx.beans.property.SimpleIntegerProperty(data.getValue().getDiscount()).asObject());
+        // Инициализация таблицы клиентов
+        clientIdColumn.setCellValueFactory(cellData -> 
+            new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getClientId()).asObject());
+        clientPhoneColumn.setCellValueFactory(cellData -> 
+            new javafx.beans.property.SimpleStringProperty(cellData.getValue().getPhone()));
+        clientNameColumn.setCellValueFactory(cellData -> 
+            new javafx.beans.property.SimpleStringProperty(cellData.getValue().getFullName()));
+        clientEmailColumn.setCellValueFactory(cellData -> 
+            new javafx.beans.property.SimpleStringProperty(cellData.getValue().getEmail()));
+        clientTotalColumn.setCellValueFactory(cellData -> 
+            new javafx.beans.property.SimpleObjectProperty<>(cellData.getValue().getTotalPurchases()));
+        clientDiscountColumn.setCellValueFactory(cellData -> 
+            new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getDiscount()).asObject());
         
-        // Настройка таблицы материалов
-        materialIdColumn.setCellValueFactory(data -> 
-            new javafx.beans.property.SimpleIntegerProperty(data.getValue().getMaterialId()).asObject());
-        materialNameColumn.setCellValueFactory(data -> 
-            new javafx.beans.property.SimpleStringProperty(data.getValue().getName()));
-        materialCostColumn.setCellValueFactory(data -> 
-            new javafx.beans.property.SimpleObjectProperty<>(data.getValue().getCostPerGram()));
+        // Инициализация таблицы материалов
+        materialIdColumn.setCellValueFactory(cellData -> 
+            new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getMaterialId()).asObject());
+        materialNameColumn.setCellValueFactory(cellData -> 
+            new javafx.beans.property.SimpleStringProperty(cellData.getValue().getName()));
+        materialCostColumn.setCellValueFactory(cellData -> 
+            new javafx.beans.property.SimpleObjectProperty<>(cellData.getValue().getCostPerGram()));
         
-        // Настройка таблицы типов изделий
-        productTypeIdColumn.setCellValueFactory(data -> 
-            new javafx.beans.property.SimpleIntegerProperty(data.getValue().getTypeId()).asObject());
-        productTypeNameColumn.setCellValueFactory(data -> 
-            new javafx.beans.property.SimpleStringProperty(data.getValue().getName()));
-        productTypeCostColumn.setCellValueFactory(data -> 
-            new javafx.beans.property.SimpleObjectProperty<>(data.getValue().getLaborCost()));
+        // Инициализация таблицы типов изделий
+        productTypeIdColumn.setCellValueFactory(cellData -> 
+            new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getTypeId()).asObject());
+        productTypeNameColumn.setCellValueFactory(cellData -> 
+            new javafx.beans.property.SimpleStringProperty(cellData.getValue().getName()));
+        productTypeCostColumn.setCellValueFactory(cellData -> 
+            new javafx.beans.property.SimpleObjectProperty<>(cellData.getValue().getLaborCost()));
         
-        // Настройка таблицы заказов
-        orderIdColumn.setCellValueFactory(data -> 
-            new javafx.beans.property.SimpleIntegerProperty(data.getValue().getOrderId()).asObject());
-        orderDateColumn.setCellValueFactory(data -> 
+        // Инициализация таблицы заказов
+        orderIdColumn.setCellValueFactory(cellData -> 
+            new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getOrderId()).asObject());
+        orderDateColumn.setCellValueFactory(cellData -> 
             new javafx.beans.property.SimpleStringProperty(
-                data.getValue().getOrderDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))));
-        orderStatusColumn.setCellValueFactory(data -> 
-            new javafx.beans.property.SimpleStringProperty(data.getValue().getStatus().toString()));
-        orderClientColumn.setCellValueFactory(data -> 
-            new javafx.beans.property.SimpleStringProperty(data.getValue().getClient().getFullName()));
-        orderTypeColumn.setCellValueFactory(data -> 
-            new javafx.beans.property.SimpleStringProperty(data.getValue().getProductType().getName()));
-        orderWeightColumn.setCellValueFactory(data -> 
-            new javafx.beans.property.SimpleObjectProperty<>(data.getValue().getTotalWeight()));
-        orderPriceColumn.setCellValueFactory(data -> 
-            new javafx.beans.property.SimpleObjectProperty<>(data.getValue().getPrice()));
-        orderTotalColumn.setCellValueFactory(data -> 
-            new javafx.beans.property.SimpleObjectProperty<>(data.getValue().getTotalWithDiscount()));
+                cellData.getValue().getOrderDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))));
+        orderStatusColumn.setCellValueFactory(cellData -> 
+            new javafx.beans.property.SimpleStringProperty(cellData.getValue().getStatus().toString()));
+        orderClientColumn.setCellValueFactory(cellData -> 
+            new javafx.beans.property.SimpleStringProperty(cellData.getValue().getClient().getFullName()));
+        orderTypeColumn.setCellValueFactory(cellData -> 
+            new javafx.beans.property.SimpleStringProperty(cellData.getValue().getProductType().getName()));
+        orderWeightColumn.setCellValueFactory(cellData -> 
+            new javafx.beans.property.SimpleObjectProperty<>(cellData.getValue().getTotalWeight()));
+        orderPriceColumn.setCellValueFactory(cellData -> 
+            new javafx.beans.property.SimpleObjectProperty<>(cellData.getValue().getPrice()));
+        orderTotalColumn.setCellValueFactory(cellData -> 
+            new javafx.beans.property.SimpleObjectProperty<>(cellData.getValue().getTotalWithDiscount()));
+        
+        // Инициализация таблицы пользователей
+        userIdColumn.setCellValueFactory(cellData -> 
+            new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getUserId()).asObject());
+        userUsernameColumn.setCellValueFactory(cellData -> 
+            new javafx.beans.property.SimpleStringProperty(cellData.getValue().getUsername()));
+        userRoleColumn.setCellValueFactory(cellData -> 
+            new javafx.beans.property.SimpleStringProperty(cellData.getValue().getRole().getRoleName()));
     }
     
     private void refreshAllData() {
-        // Загружаем данные из БД
-        clientsController.loadClients();
-        materialsController.loadMaterials();
-        productTypesController.loadProductTypes();
-        ordersController.loadOrders();
-        
-        // Обновляем таблицы
-        clientsTable.setItems(FXCollections.observableArrayList(clientsController.getClients()));
-        materialsTable.setItems(FXCollections.observableArrayList(materialsController.getMaterials()));
-        productTypesTable.setItems(FXCollections.observableArrayList(productTypesController.getProductTypes()));
-        ordersTable.setItems(FXCollections.observableArrayList(ordersController.getOrders()));
+        try {
+            // Загружаем все данные через DataInitializer
+            dataInitializer.initializeAllData();
+            
+            // Обновляем отображение таблиц
+            clientsController.updateTableView();
+            materialsController.updateTableView();
+            productTypesController.updateTableView();
+            ordersController.updateTableView();
+            usersController.loadAllUsers();
+            
+        } catch (Exception e) {
+            showError("Ошибка загрузки данных", e.getMessage());
+        }
     }
     
     private void refreshClientsData() {
-        // Обновляем только данные клиентов
-        clientsController.loadClients();
-        clientsTable.setItems(FXCollections.observableArrayList(clientsController.getClients()));
+        // Обновляем только данные клиентов через контроллер
+        clientsController.refreshClients();
     }
     
     @FXML
@@ -174,18 +294,18 @@ public class MainController {
     }
     
     @FXML private void handleEditClient() {
-        Client selected = clientsTable.getSelectionModel().getSelectedItem();
+        Client selected = clientsController.getSelectedClient();
         if (selected == null) {
-            showAlert("Предупреждение", "Выберите клиента для редактирования");
+            clientsController.showWarning("Предупреждение", "Выберите клиента для редактирования");
             return;
         }
         showClientDialog(selected);
     }
     
     @FXML private void handleDeleteClient() {
-        Client selected = clientsTable.getSelectionModel().getSelectedItem();
+        Client selected = clientsController.getSelectedClient();
         if (selected == null) {
-            showAlert("Предупреждение", "Выберите клиента для удаления");
+            clientsController.showWarning("Предупреждение", "Выберите клиента для удаления");
             return;
         }
         
@@ -196,10 +316,7 @@ public class MainController {
         
         if (alert.showAndWait().orElse(null) == ButtonType.OK) {
             if (clientsController.deleteClient(selected.getClientId())) {
-                refreshAllData();
-                showAlert("Успех", "Клиент успешно удален");
-            } else {
-                showAlert("Ошибка", "Не удалось удалить клиента");
+                // Данные уже обновлены в контроллере
             }
         }
     }
@@ -214,18 +331,18 @@ public class MainController {
     }
     
     @FXML private void handleEditMaterial() {
-        Material selected = materialsTable.getSelectionModel().getSelectedItem();
+        Material selected = materialsController.getSelectedMaterial();
         if (selected == null) {
-            showAlert("Предупреждение", "Выберите материал для редактирования");
+            materialsController.showWarning("Предупреждение", "Выберите материал для редактирования");
             return;
         }
         showMaterialDialog(selected);
     }
     
     @FXML private void handleDeleteMaterial() {
-        Material selected = materialsTable.getSelectionModel().getSelectedItem();
+        Material selected = materialsController.getSelectedMaterial();
         if (selected == null) {
-            showAlert("Предупреждение", "Выберите материал для удаления");
+            materialsController.showWarning("Предупреждение", "Выберите материал для удаления");
             return;
         }
         
@@ -236,16 +353,13 @@ public class MainController {
         
         if (alert.showAndWait().orElse(null) == ButtonType.OK) {
             if (materialsController.deleteMaterial(selected.getMaterialId())) {
-                refreshAllData();
-                showAlert("Успех", "Материал успешно удален");
-            } else {
-                showAlert("Ошибка", "Не удалось удалить материал");
+                // Данные уже обновлены в контроллере
             }
         }
     }
     
     @FXML private void handleRefreshMaterials() {
-        refreshAllData();
+        materialsController.refreshMaterials();
     }
     
     // Обработчики для типов изделий
@@ -488,6 +602,52 @@ public class MainController {
     }
     
     private void showAlert(String title, String content) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+    
+    // Методы для работы с пользователями
+    @FXML
+    private void handleAddUser() {
+        usersController.addUser();
+    }
+    
+    @FXML
+    private void handleEditUser() {
+        usersController.editUser();
+    }
+    
+    @FXML
+    private void handleDeleteUser() {
+        usersController.deleteUser();
+    }
+    
+    @FXML
+    private void handleRefreshUsers() {
+        usersController.refreshUsers();
+    }
+    
+    // Вспомогательные методы для отображения диалогов
+    private void showError(String title, String content) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+    
+    private void showWarning(String title, String content) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+    
+    private void showInfo(String title, String content) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
         alert.setHeaderText(null);

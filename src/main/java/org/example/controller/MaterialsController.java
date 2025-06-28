@@ -1,18 +1,30 @@
 package org.example.controller;
 
 import org.example.database.DatabaseManager;
+import org.example.database.DataInitializer;
 import org.example.model.Material;
 import org.example.model.MaterialContainer;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.scene.control.TableView;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.math.BigDecimal;
 
+/**
+ * Контроллер для управления материалами
+ * Обеспечивает CRUD операции, работу с БД и управление интерфейсом
+ */
 public class MaterialsController {
     private static MaterialsController instance;
     private MaterialContainer materials;
+    private TableView<Material> materialsTable;
 
     private MaterialsController() {
         materials = MaterialContainer.getInstance();
@@ -25,11 +37,28 @@ public class MaterialsController {
         return instance;
     }
 
+    // ==================== МЕТОДЫ РАБОТЫ С БАЗОЙ ДАННЫХ ====================
+
     public void loadMaterials() {
         try (Connection connection = DatabaseManager.getInstance().getConnection()) {
             materials.loadFromDatabase(connection);
+            System.out.println("Материалы загружены из БД: " + materials.getMaterials().size() + " записей");
         } catch (SQLException e) {
-            System.err.println("Error loading materials: " + e.getMessage());
+            System.err.println("Ошибка загрузки материалов: " + e.getMessage());
+            showError("Ошибка загрузки данных", "Не удалось загрузить материалы из базы данных");
+        }
+    }
+
+    /**
+     * Обновляет данные материалов через DataInitializer
+     */
+    public void refreshMaterials() {
+        try {
+            DataInitializer.getInstance().initializeMaterials(DatabaseManager.getInstance().getConnection());
+            updateTableView();
+        } catch (SQLException e) {
+            System.err.println("Ошибка обновления материалов: " + e.getMessage());
+            showError("Ошибка обновления", "Не удалось обновить данные материалов");
         }
     }
 
@@ -46,13 +75,16 @@ public class MaterialsController {
                         if (rs.next()) {
                             material.setMaterialId(rs.getInt(1));
                             materials.addMaterial(material);
+                            updateTableView();
+                            showSuccess("Материал добавлен", "Материал " + material.getName() + " успешно добавлен");
                             return true;
                         }
                     }
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error adding material: " + e.getMessage());
+            System.err.println("Ошибка добавления материала: " + e.getMessage());
+            showError("Ошибка добавления", "Не удалось добавить материал: " + e.getMessage());
         }
         return false;
     }
@@ -75,17 +107,38 @@ public class MaterialsController {
                             break;
                         }
                     }
+                    updateTableView();
+                    showSuccess("Материал обновлен", "Данные материала " + material.getName() + " успешно обновлены");
                     return true;
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error updating material: " + e.getMessage());
+            System.err.println("Ошибка обновления материала: " + e.getMessage());
+            showError("Ошибка обновления", "Не удалось обновить материал: " + e.getMessage());
         }
         return false;
     }
 
     public boolean deleteMaterial(int materialId) {
+        Material material = getMaterialById(materialId);
+        if (material == null) {
+            showError("Ошибка удаления", "Материал не найден");
+            return false;
+        }
+        
+        // Проверяем, используется ли материал в заказах
         try (Connection connection = DatabaseManager.getInstance().getConnection()) {
+            String checkQuery = "SELECT COUNT(*) FROM order_materials WHERE material_id = ?";
+            try (PreparedStatement checkStmt = connection.prepareStatement(checkQuery)) {
+                checkStmt.setInt(1, materialId);
+                try (ResultSet rs = checkStmt.executeQuery()) {
+                    if (rs.next() && rs.getInt(1) > 0) {
+                        showError("Ошибка удаления", "Нельзя удалить материал, который используется в заказах!");
+                        return false;
+                    }
+                }
+            }
+
             String query = "DELETE FROM materials WHERE material_id = ?";
             try (PreparedStatement stmt = connection.prepareStatement(query)) {
                 stmt.setInt(1, materialId);
@@ -94,15 +147,20 @@ public class MaterialsController {
                 if (result > 0) {
                     // Удаляем материал из списка
                     List<Material> materialList = materials.getMaterials();
-                    materialList.removeIf(material -> material.getMaterialId() == materialId);
+                    materialList.removeIf(m -> m.getMaterialId() == materialId);
+                    updateTableView();
+                    showSuccess("Материал удален", "Материал " + material.getName() + " успешно удален");
                     return true;
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error deleting material: " + e.getMessage());
+            System.err.println("Ошибка удаления материала: " + e.getMessage());
+            showError("Ошибка удаления", "Не удалось удалить материал: " + e.getMessage());
         }
         return false;
     }
+
+    // ==================== МЕТОДЫ УПРАВЛЕНИЯ ДАННЫМИ ====================
 
     public List<Material> getMaterials() {
         return materials.getMaterials();
@@ -114,5 +172,86 @@ public class MaterialsController {
 
     public Material getMaterialByName(String name) {
         return materials.getMaterialByName(name);
+    }
+
+    // ==================== МЕТОДЫ УПРАВЛЕНИЯ ИНТЕРФЕЙСОМ ====================
+
+    /**
+     * Устанавливает таблицу для отображения материалов
+     */
+    public void setTableView(TableView<Material> table) {
+        this.materialsTable = table;
+        updateTableView();
+    }
+
+    /**
+     * Обновляет данные в таблице
+     */
+    public void updateTableView() {
+        if (materialsTable != null) {
+            ObservableList<Material> observableList = FXCollections.observableArrayList(materials.getMaterials());
+            materialsTable.setItems(observableList);
+        }
+    }
+
+    /**
+     * Получает выбранный материал из таблицы
+     */
+    public Material getSelectedMaterial() {
+        if (materialsTable != null) {
+            return materialsTable.getSelectionModel().getSelectedItem();
+        }
+        return null;
+    }
+
+    /**
+     * Проверяет, выбран ли материал в таблице
+     */
+    public boolean isMaterialSelected() {
+        return getSelectedMaterial() != null;
+    }
+
+    /**
+     * Очищает выбор в таблице
+     */
+    public void clearSelection() {
+        if (materialsTable != null) {
+            materialsTable.getSelectionModel().clearSelection();
+        }
+    }
+
+    // ==================== МЕТОДЫ УВЕДОМЛЕНИЙ ====================
+
+    /**
+     * Показывает информационное сообщение
+     */
+    private void showSuccess(String title, String content) {
+        Alert alert = new Alert(AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+
+    /**
+     * Показывает сообщение об ошибке
+     */
+    private void showError(String title, String content) {
+        Alert alert = new Alert(AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+
+    /**
+     * Показывает предупреждение
+     */
+    public void showWarning(String title, String content) {
+        Alert alert = new Alert(AlertType.WARNING);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 } 

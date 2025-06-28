@@ -41,7 +41,9 @@ public class LoginController {
                 Parent root = loader.load();
                 
                 MainController mainController = loader.getController();
-                mainController.initialize();
+                
+                // Передаем текущего пользователя в MainController
+                mainController.setCurrentUser(authController.getCurrentUser());
                 
                 Stage stage = (Stage) usernameField.getScene().getWindow();
                 stage.setTitle("Ювелирная мастерская - " + authController.getCurrentUser().getUsername());
