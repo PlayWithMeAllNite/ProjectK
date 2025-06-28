@@ -4,21 +4,24 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Users {
-    private static Users instance;
+public class UserContainer {
+    private static UserContainer instance;
     private List<User> users;
     
-    private Users() {
+    // Конструктор для Singleton
+    private UserContainer() {
         users = new ArrayList<>();
     }
     
-    public static synchronized Users getInstance() {
+    // Singleton метод
+    public static synchronized UserContainer getInstance() {
         if (instance == null) {
-            instance = new Users();
+            instance = new UserContainer();
         }
         return instance;
     }
     
+    // Методы для управления списком пользователей
     public List<User> getUsers() {
         return users;
     }

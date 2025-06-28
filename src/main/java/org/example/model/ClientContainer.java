@@ -5,21 +5,24 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Clients {
-    private static Clients instance;
+public class ClientContainer {
+    private static ClientContainer instance;
     private List<Client> clients;
     
-    private Clients() {
+    // Конструктор для Singleton
+    private ClientContainer() {
         clients = new ArrayList<>();
     }
     
-    public static synchronized Clients getInstance() {
+    // Singleton метод
+    public static synchronized ClientContainer getInstance() {
         if (instance == null) {
-            instance = new Clients();
+            instance = new ClientContainer();
         }
         return instance;
     }
     
+    // Методы для управления списком клиентов
     public List<Client> getClients() {
         return clients;
     }

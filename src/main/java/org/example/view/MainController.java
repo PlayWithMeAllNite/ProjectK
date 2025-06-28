@@ -139,16 +139,16 @@ public class MainController {
         ordersController.loadOrders();
         
         // Обновляем таблицы
-        clientsTable.setItems(FXCollections.observableArrayList(clientsController.getAllClients()));
-        materialsTable.setItems(FXCollections.observableArrayList(materialsController.getAllMaterials()));
-        productTypesTable.setItems(FXCollections.observableArrayList(productTypesController.getAllProductTypes()));
-        ordersTable.setItems(FXCollections.observableArrayList(ordersController.getAllOrders()));
+        clientsTable.setItems(FXCollections.observableArrayList(clientsController.getClients()));
+        materialsTable.setItems(FXCollections.observableArrayList(materialsController.getMaterials()));
+        productTypesTable.setItems(FXCollections.observableArrayList(productTypesController.getProductTypes()));
+        ordersTable.setItems(FXCollections.observableArrayList(ordersController.getOrders()));
     }
     
     private void refreshClientsData() {
         // Обновляем только данные клиентов
         clientsController.loadClients();
-        clientsTable.setItems(FXCollections.observableArrayList(clientsController.getAllClients()));
+        clientsTable.setItems(FXCollections.observableArrayList(clientsController.getClients()));
     }
     
     @FXML
@@ -458,9 +458,9 @@ public class MainController {
             
             OrderDialogController controller = loader.getController();
             controller.setOrder(order);
-            controller.setClients(clientsController.getAllClients());
-            controller.setProductTypes(productTypesController.getAllProductTypes());
-            controller.setMaterials(materialsController.getAllMaterials());
+            controller.setClients(clientsController.getClients());
+            controller.setProductTypes(productTypesController.getProductTypes());
+            controller.setMaterials(materialsController.getMaterials());
             controller.setStatuses();
             
             dialogStage.showAndWait();

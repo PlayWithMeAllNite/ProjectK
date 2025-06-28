@@ -4,21 +4,24 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Roles {
-    private static Roles instance;
+public class RoleContainer {
+    private static RoleContainer instance;
     private List<Role> roles;
     
-    private Roles() {
+    // Конструктор для Singleton
+    private RoleContainer() {
         roles = new ArrayList<>();
     }
     
-    public static synchronized Roles getInstance() {
+    // Singleton метод
+    public static synchronized RoleContainer getInstance() {
         if (instance == null) {
-            instance = new Roles();
+            instance = new RoleContainer();
         }
         return instance;
     }
     
+    // Методы для управления списком ролей
     public List<Role> getRoles() {
         return roles;
     }

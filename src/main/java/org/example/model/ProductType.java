@@ -7,6 +7,7 @@ public class ProductType {
     private String name;
     private BigDecimal laborCost;
     
+    // Конструкторы
     public ProductType(int typeId, String name, BigDecimal laborCost) {
         this.typeId = typeId;
         this.name = name;

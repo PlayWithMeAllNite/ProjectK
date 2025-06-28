@@ -2,18 +2,21 @@ package org.example.controller;
 
 import org.example.database.DatabaseManager;
 import org.example.model.Client;
-import org.example.model.Clients;
+import org.example.model.ClientContainer;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import java.math.BigDecimal;
 
 public class ClientsController {
     private static ClientsController instance;
-    private Clients clients;
+    private ClientContainer clients;
     
     private ClientsController() {
-        clients = Clients.getInstance();
+        clients = ClientContainer.getInstance();
     }
     
     public static synchronized ClientsController getInstance() {
@@ -28,19 +31,19 @@ public class ClientsController {
             clients.loadFromDatabase(connection);
         } catch (SQLException e) {
             System.err.println("Error loading clients: " + e.getMessage());
-            e.printStackTrace();
         }
     }
     
     public boolean addClient(Client client) {
         try (Connection connection = DatabaseManager.getInstance().getConnection()) {
             String query = "INSERT INTO clients (phone, full_name, email, total_purchases, discount) VALUES (?, ?, ?, ?, ?)";
-            try (PreparedStatement stmt = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+            try (PreparedStatement stmt = connection.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS)) {
                 stmt.setString(1, client.getPhone());
                 stmt.setString(2, client.getFullName());
                 stmt.setString(3, client.getEmail());
                 stmt.setBigDecimal(4, client.getTotalPurchases());
                 stmt.setInt(5, client.getDiscount());
+                
                 int result = stmt.executeUpdate();
                 if (result > 0) {
                     try (ResultSet rs = stmt.getGeneratedKeys()) {
@@ -54,7 +57,6 @@ public class ClientsController {
             }
         } catch (SQLException e) {
             System.err.println("Error adding client: " + e.getMessage());
-            e.printStackTrace();
         }
         return false;
     }
@@ -69,15 +71,22 @@ public class ClientsController {
                 stmt.setBigDecimal(4, client.getTotalPurchases());
                 stmt.setInt(5, client.getDiscount());
                 stmt.setInt(6, client.getClientId());
+                
                 int result = stmt.executeUpdate();
                 if (result > 0) {
-                    loadClients();
+                    // Обновляем клиента в списке
+                    List<Client> clientList = clients.getClients();
+                    for (int i = 0; i < clientList.size(); i++) {
+                        if (clientList.get(i).getClientId() == client.getClientId()) {
+                            clientList.set(i, client);
+                            break;
+                        }
+                    }
                     return true;
                 }
             }
         } catch (SQLException e) {
             System.err.println("Error updating client: " + e.getMessage());
-            e.printStackTrace();
         }
         return false;
     }
@@ -87,25 +96,27 @@ public class ClientsController {
             String query = "DELETE FROM clients WHERE client_id = ?";
             try (PreparedStatement stmt = connection.prepareStatement(query)) {
                 stmt.setInt(1, clientId);
+                
                 int result = stmt.executeUpdate();
                 if (result > 0) {
-                    clients.getClients().removeIf(client -> client.getClientId() == clientId);
+                    // Удаляем клиента из списка
+                    List<Client> clientList = clients.getClients();
+                    clientList.removeIf(client -> client.getClientId() == clientId);
                     return true;
                 }
             }
         } catch (SQLException e) {
             System.err.println("Error deleting client: " + e.getMessage());
-            e.printStackTrace();
         }
         return false;
     }
     
-    public Client getClientById(int clientId) {
-        return clients.getClientById(clientId);
+    public List<Client> getClients() {
+        return clients.getClients();
     }
     
-    public List<Client> getAllClients() {
-        return clients.getClients();
+    public Client getClientById(int clientId) {
+        return clients.getClientById(clientId);
     }
     
     public Client getClientByPhone(String phone) {
@@ -153,9 +164,5 @@ public class ClientsController {
             System.err.println("Error updating client discount: " + e.getMessage());
             e.printStackTrace();
         }
-    }
-    
-    public Clients getClients() {
-        return clients;
     }
 } 

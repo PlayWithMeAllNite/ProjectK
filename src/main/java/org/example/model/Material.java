@@ -7,6 +7,7 @@ public class Material {
     private String name;
     private BigDecimal costPerGram;
     
+    // Конструкторы
     public Material(int materialId, String name, BigDecimal costPerGram) {
         this.materialId = materialId;
         this.name = name;

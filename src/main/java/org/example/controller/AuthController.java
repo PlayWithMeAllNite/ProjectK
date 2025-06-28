@@ -2,8 +2,7 @@ package org.example.controller;
 
 import org.example.database.DatabaseManager;
 import org.example.model.User;
-import org.example.model.Users;
-import org.example.model.Roles;
+import org.example.model.Role;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -37,10 +36,7 @@ public class AuthController {
                 
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
-                        Roles roles = Roles.getInstance();
-                        roles.loadFromDatabase(connection);
-                        
-                        org.example.model.Role role = new org.example.model.Role(
+                        Role role = new Role(
                             rs.getInt("role_id"),
                             rs.getString("role_name")
                         );

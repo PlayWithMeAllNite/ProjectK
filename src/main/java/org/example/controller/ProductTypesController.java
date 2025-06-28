@@ -2,17 +2,20 @@ package org.example.controller;
 
 import org.example.database.DatabaseManager;
 import org.example.model.ProductType;
-import org.example.model.ProductTypes;
+import org.example.model.ProductTypeContainer;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 
 public class ProductTypesController {
     private static ProductTypesController instance;
-    private ProductTypes productTypes;
+    private ProductTypeContainer productTypes;
 
     private ProductTypesController() {
-        productTypes = ProductTypes.getInstance();
+        productTypes = ProductTypeContainer.getInstance();
     }
 
     public static synchronized ProductTypesController getInstance() {
@@ -33,9 +36,10 @@ public class ProductTypesController {
     public boolean addProductType(ProductType productType) {
         try (Connection connection = DatabaseManager.getInstance().getConnection()) {
             String query = "INSERT INTO product_types (name, labor_cost) VALUES (?, ?)";
-            try (PreparedStatement stmt = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+            try (PreparedStatement stmt = connection.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS)) {
                 stmt.setString(1, productType.getName());
                 stmt.setBigDecimal(2, productType.getLaborCost());
+                
                 int result = stmt.executeUpdate();
                 if (result > 0) {
                     try (ResultSet rs = stmt.getGeneratedKeys()) {
@@ -60,9 +64,17 @@ public class ProductTypesController {
                 stmt.setString(1, productType.getName());
                 stmt.setBigDecimal(2, productType.getLaborCost());
                 stmt.setInt(3, productType.getTypeId());
+                
                 int result = stmt.executeUpdate();
                 if (result > 0) {
-                    loadProductTypes();
+                    // Обновляем тип изделия в списке
+                    List<ProductType> productTypeList = productTypes.getProductTypes();
+                    for (int i = 0; i < productTypeList.size(); i++) {
+                        if (productTypeList.get(i).getTypeId() == productType.getTypeId()) {
+                            productTypeList.set(i, productType);
+                            break;
+                        }
+                    }
                     return true;
                 }
             }
@@ -77,9 +89,12 @@ public class ProductTypesController {
             String query = "DELETE FROM product_types WHERE type_id = ?";
             try (PreparedStatement stmt = connection.prepareStatement(query)) {
                 stmt.setInt(1, typeId);
+                
                 int result = stmt.executeUpdate();
                 if (result > 0) {
-                    productTypes.getProductTypes().removeIf(type -> type.getTypeId() == typeId);
+                    // Удаляем тип изделия из списка
+                    List<ProductType> productTypeList = productTypes.getProductTypes();
+                    productTypeList.removeIf(productType -> productType.getTypeId() == typeId);
                     return true;
                 }
             }
@@ -93,7 +108,11 @@ public class ProductTypesController {
         return productTypes.getProductTypeById(typeId);
     }
 
-    public List<ProductType> getAllProductTypes() {
+    public ProductType getProductTypeByName(String name) {
+        return productTypes.getProductTypeByName(name);
+    }
+
+    public List<ProductType> getProductTypes() {
         return productTypes.getProductTypes();
     }
 } 

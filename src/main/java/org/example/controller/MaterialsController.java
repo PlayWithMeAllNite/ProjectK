@@ -2,17 +2,20 @@ package org.example.controller;
 
 import org.example.database.DatabaseManager;
 import org.example.model.Material;
-import org.example.model.Materials;
+import org.example.model.MaterialContainer;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 
 public class MaterialsController {
     private static MaterialsController instance;
-    private Materials materials;
+    private MaterialContainer materials;
 
     private MaterialsController() {
-        materials = Materials.getInstance();
+        materials = MaterialContainer.getInstance();
     }
 
     public static synchronized MaterialsController getInstance() {
@@ -33,9 +36,10 @@ public class MaterialsController {
     public boolean addMaterial(Material material) {
         try (Connection connection = DatabaseManager.getInstance().getConnection()) {
             String query = "INSERT INTO materials (name, cost_per_gram) VALUES (?, ?)";
-            try (PreparedStatement stmt = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+            try (PreparedStatement stmt = connection.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS)) {
                 stmt.setString(1, material.getName());
                 stmt.setBigDecimal(2, material.getCostPerGram());
+                
                 int result = stmt.executeUpdate();
                 if (result > 0) {
                     try (ResultSet rs = stmt.getGeneratedKeys()) {
@@ -60,9 +64,17 @@ public class MaterialsController {
                 stmt.setString(1, material.getName());
                 stmt.setBigDecimal(2, material.getCostPerGram());
                 stmt.setInt(3, material.getMaterialId());
+                
                 int result = stmt.executeUpdate();
                 if (result > 0) {
-                    loadMaterials();
+                    // Обновляем материал в списке
+                    List<Material> materialList = materials.getMaterials();
+                    for (int i = 0; i < materialList.size(); i++) {
+                        if (materialList.get(i).getMaterialId() == material.getMaterialId()) {
+                            materialList.set(i, material);
+                            break;
+                        }
+                    }
                     return true;
                 }
             }
@@ -77,9 +89,12 @@ public class MaterialsController {
             String query = "DELETE FROM materials WHERE material_id = ?";
             try (PreparedStatement stmt = connection.prepareStatement(query)) {
                 stmt.setInt(1, materialId);
+                
                 int result = stmt.executeUpdate();
                 if (result > 0) {
-                    materials.getMaterials().removeIf(material -> material.getMaterialId() == materialId);
+                    // Удаляем материал из списка
+                    List<Material> materialList = materials.getMaterials();
+                    materialList.removeIf(material -> material.getMaterialId() == materialId);
                     return true;
                 }
             }
@@ -89,11 +104,15 @@ public class MaterialsController {
         return false;
     }
 
+    public List<Material> getMaterials() {
+        return materials.getMaterials();
+    }
+
     public Material getMaterialById(int materialId) {
         return materials.getMaterialById(materialId);
     }
 
-    public List<Material> getAllMaterials() {
-        return materials.getMaterials();
+    public Material getMaterialByName(String name) {
+        return materials.getMaterialByName(name);
     }
 } 

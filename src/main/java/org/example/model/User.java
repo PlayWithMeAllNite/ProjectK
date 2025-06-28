@@ -6,6 +6,7 @@ public class User {
     private String passwordHash;
     private Role role;
     
+    // Конструкторы
     public User(int userId, String username, String passwordHash, Role role) {
         this.userId = userId;
         this.username = username;

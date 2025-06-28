@@ -33,6 +33,7 @@ public class Order {
     private BigDecimal price;
     private List<OrderMaterial> materials;
     
+    // Конструкторы
     public Order(int orderId, Client client, LocalDate orderDate, Status status, 
                  ProductType productType, BigDecimal totalWeight, BigDecimal price) {
         this.orderId = orderId;

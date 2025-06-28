@@ -5,21 +5,24 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Materials {
-    private static Materials instance;
+public class MaterialContainer {
+    private static MaterialContainer instance;
     private List<Material> materials;
     
-    private Materials() {
+    // Конструктор для Singleton
+    private MaterialContainer() {
         materials = new ArrayList<>();
     }
     
-    public static synchronized Materials getInstance() {
+    // Singleton метод
+    public static synchronized MaterialContainer getInstance() {
         if (instance == null) {
-            instance = new Materials();
+            instance = new MaterialContainer();
         }
         return instance;
     }
     
+    // Методы для управления списком материалов
     public List<Material> getMaterials() {
         return materials;
     }

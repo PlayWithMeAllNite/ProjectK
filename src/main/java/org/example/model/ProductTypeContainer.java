@@ -5,21 +5,24 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ProductTypes {
-    private static ProductTypes instance;
+public class ProductTypeContainer {
+    private static ProductTypeContainer instance;
     private List<ProductType> productTypes;
     
-    private ProductTypes() {
+    // Конструктор для Singleton
+    private ProductTypeContainer() {
         productTypes = new ArrayList<>();
     }
     
-    public static synchronized ProductTypes getInstance() {
+    // Singleton метод
+    public static synchronized ProductTypeContainer getInstance() {
         if (instance == null) {
-            instance = new ProductTypes();
+            instance = new ProductTypeContainer();
         }
         return instance;
     }
     
+    // Методы для управления списком типов изделий
     public List<ProductType> getProductTypes() {
         return productTypes;
     }

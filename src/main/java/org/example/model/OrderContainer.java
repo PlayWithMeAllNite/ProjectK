@@ -2,25 +2,27 @@ package org.example.model;
 
 import java.math.BigDecimal;
 import java.sql.*;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Orders {
-    private static Orders instance;
+public class OrderContainer {
+    private static OrderContainer instance;
     private List<Order> orders;
     
-    private Orders() {
+    // Конструктор для Singleton
+    private OrderContainer() {
         orders = new ArrayList<>();
     }
     
-    public static synchronized Orders getInstance() {
+    // Singleton метод
+    public static synchronized OrderContainer getInstance() {
         if (instance == null) {
-            instance = new Orders();
+            instance = new OrderContainer();
         }
         return instance;
     }
     
+    // Методы для управления списком заказов
     public List<Order> getOrders() {
         return orders;
     }

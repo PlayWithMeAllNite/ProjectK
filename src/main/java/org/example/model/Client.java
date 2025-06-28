@@ -10,6 +10,7 @@ public class Client {
     private BigDecimal totalPurchases;
     private int discount;
     
+    // Конструкторы
     public Client(int clientId, String phone, String fullName, String email, 
                   BigDecimal totalPurchases, int discount) {
         this.clientId = clientId;
